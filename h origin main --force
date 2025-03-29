@@ -1,0 +1,59 @@
+[33mcommit 40161ccff872cf4788523bd75a09a091657ab8e7[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: pavelromci25 <pavel.romci25@gmail.com>
+Date:   Sat Mar 29 17:46:26 2025 +0200
+
+    Delete assets directory
+
+[33mcommit 45c43319be28d7ba8d06106022e8f44a17c8449f[m
+Author: pavelromci25 <pavel.romci25@gmail.com>
+Date:   Sat Mar 29 17:46:16 2025 +0200
+
+    Delete vite.svg
+
+[33mcommit 8602a3e4ea77857aee9d6387e1b3e58143ef945b[m
+Author: pavelromci25 <pavel.romci25@gmail.com>
+Date:   Sat Mar 29 17:46:05 2025 +0200
+
+    Delete index.html
+
+[33mcommit 47dadd1e1adf160d13a35f5aedaa700c7245d631[m
+Author: pavelromci25 <pavel.romci25@gmail.com>
+Date:   Sat Mar 29 13:25:24 2025 +0200
+
+    Fixed SDK usage for @telegram-apps/sdk@3 with correct API methods
+
+[33mcommit 0510bd099aced89eaf66b7643b243a8e2453395b[m
+Author: pavelromci25 <pavel.romci25@gmail.com>
+Date:   Sat Mar 29 12:37:08 2025 +0200
+
+    Restored script tag and fixed fullscreen mode
+
+[33mcommit c0ad89d10b71c6e17671a2020cbf5d9cc701a3b2[m
+Author: pavelromci25 <pavel.romci25@gmail.com>
+Date:   Sat Mar 29 12:28:27 2025 +0200
+
+    Restored script tag and fixed fullscreen mode
+
+[33mcommit 1ff052ad28f641b7336954709644996e1d5c586b[m
+Author: pavelromci25 <pavel.romci25@gmail.com>
+Date:   Sat Mar 29 12:16:47 2025 +0200
+
+    Restored script tag and fixed fullscreen for iOS only
+
+[33mcommit ae02126299a643fcdc8bf924aa92ef60ce4531b8[m
+Author: pavelromci25 <pavel.romci25@gmail.com>
+Date:   Sat Mar 29 12:03:44 2025 +0200
+
+    Removed enableVerticalSwipes and added CSS fallback for fullscreen
+
+[33mcommit 3180e814e7e237eb1d2e348fd3a4af1f561a1ef1[m
+Author: pavelromci25 <pavel.romci25@gmail.com>
+Date:   Sat Mar 29 02:50:09 2025 +0200
+
+    Updated fullscreen mode with requestFullscreen and fixed types
+
+[33mcommit e48ddadb0117e7879eed61ff8294c11982ddb05d[m
+Author: pavelromci25 <pavel.romci25@gmail.com>
+Date:   Sat Mar 29 02:29:04 2025 +0200
+
+    Fixed design
