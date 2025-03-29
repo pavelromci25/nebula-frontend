@@ -1,114 +1,62 @@
-import { useState, useEffect, useCallback } from 'react';
-import { 
-  app,
-  user, 
-  mainButton, 
-  backButton, 
-  viewport, 
-  closingConfirmation,
-  webApp
-} from '@telegram-apps/sdk';
+import { useState, useEffect } from 'react';
+import { init } from '@telegram-apps/sdk';
+
+// Интерфейс для данных пользователя
+interface TelegramUser {
+  id: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  photoUrl?: string;
+}
 
 export function useTelegram() {
   const [isReady, setIsReady] = useState(false);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<TelegramUser | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  
-  // Инициализация SDK
+
   useEffect(() => {
-    // Инициализируем приложение
-    app.ready();
-    
-    // Получаем данные пользователя
-    const telegramUser = user.get();
-    if (telegramUser) {
-      setUserData(telegramUser);
-    } else {
-      // Для тестирования в браузере
-      setUserData({ id: 'guest', first_name: 'Гость' });
-    }
-    
-    // Расширяем приложение на весь экран
     try {
-      viewport.expand();
+      // Инициализация SDK
+      const { ready, expand, initDataUnsafe } = init();
+
+      // Сообщаем Telegram, что приложение готово
+      ready();
+
+      // Получаем данные пользователя
+      const telegramUser = initDataUnsafe.user;
+      if (telegramUser) {
+        setUserData({
+          id: String(telegramUser.id),
+          firstName: telegramUser.first_name,
+          lastName: telegramUser.last_name,
+          username: telegramUser.username,
+          photoUrl: telegramUser.photo_url,
+        });
+      } else {
+        // Заглушка для тестирования вне Telegram
+        setUserData({
+          id: 'guest',
+          firstName: 'Гость',
+        });
+      }
+
+      // Устанавливаем полноэкранный режим
+      expand();
       setIsFullscreen(true);
+
+      setIsReady(true);
     } catch (e) {
-      console.error('Ошибка при расширении viewport:', e);
-    }
-    
-    // Включаем подтверждение закрытия
-    try {
-      closingConfirmation.enable();
-    } catch (e) {
-      console.error('Ошибка при включении подтверждения закрытия:', e);
-    }
-    
-    setIsReady(true);
-    
-    return () => {
-      // Отключаем действия при размонтировании
-      mainButton.hide();
-      backButton.hide();
-    };
-  }, []);
-  
-  // Открытие внешних ссылок
-  const openLink = useCallback((url: string) => {
-    try {
-      webApp.openLink(url);
-    } catch (e) {
-      console.error('Ошибка при открытии ссылки:', e);
-      window.open(url, '_blank');
+      console.error('Ошибка инициализации Telegram SDK:', e);
+      // Заглушка при ошибке
+      setUserData({ id: 'guest', firstName: 'Гость' });
+      setIsReady(true);
     }
   }, []);
-  
-  // Показать главную кнопку
-  const showMainButton = useCallback((text: string, onClick: () => void) => {
-    try {
-      mainButton.setText(text);
-      mainButton.onClick(onClick);
-      mainButton.show();
-    } catch (e) {
-      console.error('Ошибка при показе главной кнопки:', e);
-    }
-  }, []);
-  
-  // Скрыть главную кнопку
-  const hideMainButton = useCallback(() => {
-    try {
-      mainButton.hide();
-    } catch (e) {
-      console.error('Ошибка при скрытии главной кнопки:', e);
-    }
-  }, []);
-  
-  // Показать кнопку "Назад"
-  const showBackButton = useCallback((onClick: () => void) => {
-    try {
-      backButton.onClick(onClick);
-      backButton.show();
-    } catch (e) {
-      console.error('Ошибка при показе кнопки назад:', e);
-    }
-  }, []);
-  
-  // Скрыть кнопку "Назад"
-  const hideBackButton = useCallback(() => {
-    try {
-      backButton.hide();
-    } catch (e) {
-      console.error('Ошибка при скрытии кнопки назад:', e);
-    }
-  }, []);
-  
+
   return {
     user: userData,
     isReady,
     isFullscreen,
-    openLink,
-    showMainButton,
-    hideMainButton,
-    showBackButton,
-    hideBackButton
   };
 }

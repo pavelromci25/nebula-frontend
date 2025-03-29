@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
+
 /* Базовые стили */
 * {
   box-sizing: border-box;
@@ -354,5 +356,3 @@ body {
 .task-reward.stars {
   color: #2481cc;
 }
-
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap');
