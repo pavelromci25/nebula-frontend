@@ -3,14 +3,14 @@ import { retrieveLaunchParams } from '@telegram-apps/sdk';
 
 // Тип для данных пользователя
 interface TelegramUser {
-  first_name?: string; // Исправлено на Telegram-стиль
+  first_name?: string;
   id?: number;
   last_name?: string;
   username?: string;
-  photo_url?: string; // Исправлено на Telegram-стиль
-  language_code?: string; // Исправлено на Telegram-стиль
-  is_bot?: boolean; // Исправлено на Telegram-стиль
-  is_premium?: boolean; // Исправлено на Telegram-стиль
+  photo_url?: string;
+  language_code?: string;
+  is_bot?: boolean;
+  is_premium?: boolean;
 }
 
 // Тип для данных чата (если есть)
@@ -62,6 +62,7 @@ interface LaunchParams {
 interface TelegramWebApp {
   expand: () => void;
   initDataUnsafe: InitDataUnsafe;
+  platform: string; // Добавлено для платформы
 }
 
 declare global {
@@ -75,34 +76,36 @@ declare global {
 export function useTelegram() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [username, setUsername] = useState<string>('Гость');
+  const [photoUrl, setPhotoUrl] = useState<string>('');
+  const [isPremium, setIsPremium] = useState<boolean>(false);
+  const [platform, setPlatform] = useState<string>('Неизвестно');
   const [debugMessage, setDebugMessage] = useState<string>('Инициализация Telegram SDK...');
 
   useEffect(() => {
-    // Функция для проверки и инициализации Telegram Web App
     const initializeTelegram = () => {
       console.log('Проверка window.Telegram:', window.Telegram);
       if (window.Telegram && window.Telegram.WebApp) {
         try {
-          // 1. Открываем приложение на весь экран
           console.log('Вызываем expand()');
           window.Telegram.WebApp.expand();
           setIsFullscreen(true);
 
-          // 2. Получаем данные пользователя напрямую из Telegram Web App
           const initDataUnsafe = window.Telegram.WebApp.initDataUnsafe;
           console.log('Init Data Unsafe (WebApp):', initDataUnsafe);
           const user = initDataUnsafe?.user;
           console.log('User (WebApp):', user);
 
-          if (user && user.first_name) {
-            setUsername(user.first_name);
-            console.log('Установлено имя пользователя:', user.first_name);
+          if (user) {
+            setUsername(user.first_name || 'Гость');
+            setPhotoUrl(user.photo_url || '');
+            setIsPremium(user.is_premium || false);
           } else {
             console.warn('Данные пользователя не найдены в initDataUnsafe, используем "Гость"');
             setUsername('Гость');
           }
 
-          // Дополнительно: проверяем retrieveLaunchParams для отладки
+          setPlatform(window.Telegram.WebApp.platform || 'Неизвестно');
+
           const launchParams: LaunchParams = retrieveLaunchParams();
           console.log('Launch Params (SDK):', launchParams);
 
@@ -111,18 +114,22 @@ export function useTelegram() {
           console.error('Ошибка инициализации Telegram SDK:', e);
           setDebugMessage('Telegram SDK не запущен');
           setUsername('Гость');
+          setPhotoUrl('');
+          setIsPremium(false);
+          setPlatform('Неизвестно');
         }
       } else {
         setDebugMessage('Telegram SDK не запущен (не в среде Telegram)');
         setUsername('Гость');
+        setPhotoUrl('');
+        setIsPremium(false);
+        setPlatform('Неизвестно');
         console.log('Telegram Web App недоступен');
       }
     };
 
-    // Проверяем сразу
     initializeTelegram();
 
-    // Если скрипт ещё не загрузился, ждём его
     const script = document.querySelector('script[src="https://telegram.org/js/telegram-web-app.js"]');
     if (script && !window.Telegram?.WebApp) {
       console.log('Ждём загрузки telegram-web-app.js');
@@ -132,8 +139,11 @@ export function useTelegram() {
   }, []);
 
   return {
-    isFullscreen, // Полноэкранный режим
-    username,     // Имя пользователя
-    debugMessage, // Отладочное сообщение
+    isFullscreen,
+    username,
+    photoUrl,
+    isPremium,
+    platform,
+    debugMessage,
   };
 }

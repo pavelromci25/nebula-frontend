@@ -32,14 +32,15 @@ function App() {
     photoUrl: '',
   });
 
-  const { isFullscreen, username, debugMessage } = useTelegram();
+  const { isFullscreen, username, photoUrl, isPremium, platform, debugMessage } = useTelegram();
 
   useEffect(() => {
     setUserData((prev) => ({
       ...prev,
       username: username,
+      photoUrl: photoUrl,
     }));
-  }, [username]);
+  }, [username, photoUrl]);
 
   useEffect(() => {
     setTimeout(() => {
@@ -59,6 +60,8 @@ function App() {
           <h3 className="card-title">Ваш игровой портал в Telegram</h3>
           <p className="card-text">{debugMessage || 'Инициализация Telegram SDK...'}</p>
           <p className="card-text">Полноэкранный режим: {isFullscreen ? 'Включён' : 'Выключен'}</p>
+          {isPremium && <p className="card-text">Поздравляем, Вы Премиум</p>}
+          <p className="card-text">Вы используете {platform}</p>
         </div>
       </section>
 
