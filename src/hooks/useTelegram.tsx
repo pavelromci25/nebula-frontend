@@ -58,11 +58,25 @@ interface LaunchParams {
   tgWebAppVersion?: string;
 }
 
-// Интерфейс для Telegram Web App
+// Интерфейс для Telegram Web App с новыми свойствами и методами API 8.0
 interface TelegramWebApp {
   expand: () => void;
   initDataUnsafe: InitDataUnsafe;
-  platform: string; // Добавлено для платформы
+  platform: string;
+  requestFullscreen: () => void;
+  exitFullscreen: () => void;
+  isFullscreen: boolean;
+  isOrientationLocked: boolean;
+  isClosingConfirmationEnabled: boolean;
+  isVerticalSwipesEnabled: boolean;
+  enableClosingConfirmation: () => void;
+  disableClosingConfirmation: () => void;
+  enableVerticalSwipes: () => void;
+  disableVerticalSwipes: () => void;
+  setOrientationLock: (lock: 'portrait' | 'landscape') => void;
+  setOrientationUnlock: () => void;
+  onEvent: (event: string, callback: () => void) => void;
+  offEvent: (event: string, callback: () => void) => void;
 }
 
 declare global {
@@ -85,12 +99,25 @@ export function useTelegram() {
     const initializeTelegram = () => {
       console.log('Проверка window.Telegram:', window.Telegram);
       if (window.Telegram && window.Telegram.WebApp) {
+        const webApp = window.Telegram.WebApp;
         try {
-          console.log('Вызываем expand()');
-          window.Telegram.WebApp.expand();
-          setIsFullscreen(true);
+          console.log('Вызываем expand() или requestFullscreen()');
+          // Проверяем платформу и применяем соответствующий метод
+          if (webApp.platform === 'ios' || webApp.platform === 'android') {
+            // Для iOS и Android используем requestFullscreen из API 8.0
+            webApp.requestFullscreen();
+            // Настраиваем дополнительные параметры
+            webApp.enableClosingConfirmation(); // Подтверждение закрытия
+            webApp.enableVerticalSwipes(); // Вертикальные свайпы
+            webApp.setOrientationLock('portrait'); // Фиксация ориентации
+          } else {
+            // Для других платформ (например, weba) используем expand
+            webApp.expand();
+          }
+          setIsFullscreen(webApp.isFullscreen); // Проверяем реальное состояние
 
-          const initDataUnsafe = window.Telegram.WebApp.initDataUnsafe;
+          // Получаем данные пользователя
+          const initDataUnsafe = webApp.initDataUnsafe;
           console.log('Init Data Unsafe (WebApp):', initDataUnsafe);
           const user = initDataUnsafe?.user;
           console.log('User (WebApp):', user);
@@ -104,12 +131,22 @@ export function useTelegram() {
             setUsername('Гость');
           }
 
-          setPlatform(window.Telegram.WebApp.platform || 'Неизвестно');
+          setPlatform(webApp.platform || 'Неизвестно');
 
           const launchParams: LaunchParams = retrieveLaunchParams();
           console.log('Launch Params (SDK):', launchParams);
 
           setDebugMessage('Telegram SDK запущен, подключение удачное');
+
+          // Подписываемся на события для отладки
+          webApp.onEvent('fullscreenChanged', () => {
+            console.log('Событие fullscreenChanged:', webApp.isFullscreen);
+            setIsFullscreen(webApp.isFullscreen);
+          });
+          webApp.onEvent('fullscreenFailed', () => {
+            console.warn('Не удалось включить полноэкранный режим');
+            setDebugMessage('Не удалось включить полноэкранный режим');
+          });
         } catch (e) {
           console.error('Ошибка инициализации Telegram SDK:', e);
           setDebugMessage('Telegram SDK не запущен');
