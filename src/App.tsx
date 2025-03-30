@@ -32,97 +32,33 @@ function App() {
     photoUrl: '',
   });
 
-  const { user, isReady, isFullscreen } = useTelegram();
+  const { isFullscreen, username, debugMessage } = useTelegram();
 
-  const API_URL = 'https://nebula-server-ypun.onrender.com';
-
-
-
-
-  
   useEffect(() => {
+    setUserData((prev) => ({
+      ...prev,
+      username: username,
+    }));
+  }, [username]);
 
-    if (isReady && user) {
-      const userId = user.id || 'guest';
+  useEffect(() => {
+    setTimeout(() => {
+      setGames([
+        { id: '1', name: 'Игра 1', type: 'webview', url: 'https://example.com/game1' },
+        { id: '2', name: 'Игра 2', type: 'webview', url: 'https://example.com/game2' },
+      ]);
+      setIsLoading(false);
+    }, 1000);
+  }, []);
 
-      // Получение данных пользователя
-      fetch(`${API_URL}/api/user/${userId}`)
-        .then((res) => res.json())
-        .then((data) => {
-          setUserData({
-            id: data.id || user.id || 'guest',
-            username: data.username || user.username || user.firstName || 'Гость',
-            coins: data.coins || 0,
-            stars: data.stars || 0,
-            referrals: data.referrals || [],
-            photoUrl: data.photoUrl || user.photoUrl || '',
-          });
-
-          // Обновляем данные пользователя на сервере
-          fetch(`${API_URL}/api/user/update`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              telegramId: user.id,
-              username: user.username,
-              firstName: user.firstName,
-              lastName: user.lastName,
-              photoUrl: user.photoUrl,
-            }),
-          }).catch((err) => console.error('Error updating user:', err));
-        })
-        .catch((err) => {
-          console.error('Error fetching user data:', err);
-          setUserData({
-            id: user.id || 'guest',
-            username: user.username || user.firstName || 'Гость',
-            coins: 0,
-            stars: 0,
-            referrals: [],
-            photoUrl: user.photoUrl || '',
-          });
-        });
-
-
-
-
-
-
-      // Получение списка игр
-      fetch(`${API_URL}/api/games`)
-        .then((res) => res.json())
-        .then((data) => {
-          setGames(data);
-          setIsLoading(false);
-        })
-        .catch((err) => {
-          console.error('Error fetching games:', err);
-          setGames([]);
-          setIsLoading(false);
-        });
-    }
-  }, [isReady, user]);
-
-  // Загрузка
-  if (!isReady || isLoading) {
-    return (
-      <div className="loading">
-        <div className="spinner"></div>
-        <p>Загрузка Nebula...</p>
-      </div>
-    );
-  }
-
-  // Компонент HomePage
   const HomePage = () => (
     <div className="content">
       <section className="section">
         <h2 className="section-title">Добро пожаловать в Nebula!</h2>
         <div className="card">
           <h3 className="card-title">Ваш игровой портал в Telegram</h3>
-          <p className="card-text">Играйте в игры, зарабатывайте монеты и получайте звезды!</p>
+          <p className="card-text">{debugMessage || 'Инициализация Telegram SDK...'}</p>
+          <p className="card-text">Полноэкранный режим: {isFullscreen ? 'Включён' : 'Выключен'}</p>
         </div>
       </section>
 
@@ -146,14 +82,51 @@ function App() {
           </div>
         ) : (
           <div className="card">
-            <p className="card-text">Игры не найдены. Попробуйте позже.</p>
+            <p className="card-text">Игры не найдены.</p>
           </div>
         )}
       </section>
     </div>
   );
 
-  // Основной рендер (упрощен до главной страницы)
+  const GamesPage = () => (
+    <div className="content">
+      <h2 className="section-title">Все игры</h2>
+      {games.length > 0 ? (
+        <div className="games-grid">
+          {games.map((game) => (
+            <div key={game.id} className="game-card">
+              <div className="game-image">
+                <FaGamepad />
+              </div>
+              <div className="game-info">
+                <h3 className="game-title">{game.name}</h3>
+                <button className="game-button" onClick={() => window.open(game.url, '_blank')}>
+                  Играть
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="card">
+          <p className="card-text">Игры не найдены.</p>
+        </div>
+      )}
+    </div>
+  );
+
+  const ProfilePage = () => (
+    <div className="content">
+      <h2 className="section-title">Профиль</h2>
+      <div className="card">
+        <h3 className="card-title">{userData.username}</h3>
+        <p className="card-text">Монеты: {userData.coins}</p>
+        <p className="card-text">Звёзды: {userData.stars}</p>
+      </div>
+    </div>
+  );
+
   return (
     <div className="app-container">
       <UserHeader
@@ -162,7 +135,9 @@ function App() {
         stars={userData.stars}
         photoUrl={userData.photoUrl}
       />
-      <HomePage />
+      {activeTab === 'home' && <HomePage />}
+      {activeTab === 'games' && <GamesPage />}
+      {activeTab === 'profile' && <ProfilePage />}
       <BottomMenu activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
   );

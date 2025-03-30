@@ -1,86 +1,66 @@
 import { useState, useEffect } from 'react';
-import { init } from '@telegram-apps/sdk';
+import { init, retrieveLaunchParams } from '@telegram-apps/sdk';
 
-// Extend the Window interface to include TelegramWebviewProxy
-declare global {
-  interface Window {
-    TelegramWebviewProxy?: any;
-    referrals?: string[];
-  }
-}
-
-// Интерфейс для данных пользователя
+// Тип для данных пользователя
 interface TelegramUser {
-  id: string;
   firstName?: string;
-  lastName?: string;
-  username?: string;
-  photoUrl?: string;
-  coins?: number;
-  stars?: number;
-  referrals?: string[];
-}
-
-// Интерфейс для SDK
-interface TelegramSDK {
-  ready: () => void;
-  expand: () => void;
-  initDataUnsafe: {
-    user?: {
-      id: number;
-      first_name: string;
-      last_name?: string;
-      username?: string;
-      photo_url?: string;
-    };
-  };
 }
 
 export function useTelegram() {
-  const [isReady, setIsReady] = useState(false);
-  const [userData, setUserData] = useState<TelegramUser | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [username, setUsername] = useState<string>('Гость');
+  const [debugMessage, setDebugMessage] = useState<string>('');
 
   useEffect(() => {
-    try {
-      const isTMA = () => typeof window !== 'undefined' && !!window.TelegramWebviewProxy;
-      const sdk = isTMA() ? init() : {
-        ready: () => console.log('Mock ready called'),
-        expand: () => console.log('Mock expand called'),
-        initDataUnsafe: {
-          user: {
-            id: 123,
-            first_name: 'Test',
-            username: 'test_user',
-          },
-        },
-      };
-  
-      if (typeof sdk !== 'function' && typeof sdk.ready === 'function') {
-        sdk.ready();
-      } else {
-        console.warn('Метод ready не найден в SDK');
+    // Проверяем наличие Telegram Web App через window
+    if (window.Telegram?.WebApp) {
+      try {
+        // Инициализируем SDK для отладки
+        init();
+
+        // 1. Открываем приложение на весь экран
+        window.Telegram.WebApp.expand();
+        setIsFullscreen(true);
+
+        // 2. Получаем данные пользователя через SDK
+        const { initDataUnsafe } = retrieveLaunchParams();
+        let user: TelegramUser | undefined;
+        if (typeof initDataUnsafe === 'object' && initDataUnsafe !== null && 'user' in initDataUnsafe) {
+          user = (initDataUnsafe as { user?: TelegramUser }).user;
+        }
+        if (user && user.firstName) {
+          setUsername(user.firstName);
+        } else {
+          setUsername('Гость');
+        }
+
+        setDebugMessage('Telegram SDK запущен, подключение удачное');
+      } catch (e) {
+        console.error('Ошибка инициализации Telegram SDK:', e);
+        setDebugMessage('Telegram SDK не запущен');
+        setUsername('Гость');
       }
-  
-      const telegramUser = typeof sdk !== 'function' ? sdk.initDataUnsafe?.user : undefined;
-      if (telegramUser) {
-        setUserData({
-          id: String(telegramUser.id),
-          username: telegramUser.username || 'Гость',
-          coins: 0,
-          stars: 0,
-          referrals: [],
-          photoUrl: '',
-        });
-      }
-    } catch (e) {
-      console.error('Ошибка инициализации Telegram SDK:', e);
+    } else {
+      setDebugMessage('Telegram SDK не запущен (не в среде Telegram)');
+      setUsername('Гость');
     }
   }, []);
 
   return {
-    user: userData,
-    isReady,
-    isFullscreen,
+    isFullscreen, // Полноэкранный режим
+    username,     // Имя пользователя
+    debugMessage, // Отладочное сообщение
   };
+}
+
+// Декларация типов для window.Telegram.WebApp
+declare global {
+  interface Window {
+    Telegram: {
+      WebApp: {
+        expand: () => void;
+        // Можно добавить другие методы, если понадобятся
+      };
+    };
+  }
 }
