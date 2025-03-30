@@ -73,7 +73,7 @@ interface TelegramWebApp {
   disableClosingConfirmation: () => void;
   enableVerticalSwipes: () => void;
   disableVerticalSwipes: () => void;
-  setOrientationLock?: (lock: 'portrait' | 'landscape') => void; // Оставляем опциональным
+  setOrientationLock?: (lock: 'portrait' | 'landscape') => void;
   setOrientationUnlock?: () => void;
   onEvent: (event: string, callback: () => void) => void;
   offEvent: (event: string, callback: () => void) => void;
@@ -96,8 +96,8 @@ export function useTelegram() {
   const [debugMessage, setDebugMessage] = useState<string>('Инициализация Telegram SDK...');
   const [debugPlatform, setDebugPlatform] = useState<string>('Ожидание платформы...');
   const [apiVersion, setApiVersion] = useState<string>('Неизвестно');
+  const [userId, setUserId] = useState<string>('guest'); // Добавлено
 
-  // Загрузка данных пользователя
   useEffect(() => {
     const loadUserData = () => {
       if (window.Telegram && window.Telegram.WebApp) {
@@ -110,8 +110,10 @@ export function useTelegram() {
             setUsername(user.first_name || 'Гость');
             setPhotoUrl(user.photo_url || '');
             setIsPremium(user.is_premium || false);
+            setUserId(user.id ? user.id.toString() : 'guest'); // Добавлено
           } else {
             setUsername('Гость');
+            setUserId('guest');
           }
 
           setPlatform(webApp.platform || 'Неизвестно');
@@ -126,11 +128,13 @@ export function useTelegram() {
           setPlatform('Неизвестно');
           setDebugPlatform('Ошибка платформы');
           setApiVersion('Неизвестно');
+          setUserId('guest');
         }
       } else {
         setDebugMessage('Telegram SDK не запущен (не в среде Telegram)');
         setDebugPlatform('Telegram Web App недоступен');
         setApiVersion('Неизвестно');
+        setUserId('guest');
       }
     };
 
@@ -153,7 +157,6 @@ export function useTelegram() {
     }
   }, []);
 
-  // Настройка полноэкранного режима
   useEffect(() => {
     if (window.Telegram && window.Telegram.WebApp) {
       const webApp = window.Telegram.WebApp;
@@ -163,7 +166,6 @@ export function useTelegram() {
           webApp.requestFullscreen();
           webApp.enableClosingConfirmation();
           webApp.disableVerticalSwipes();
-          // Убрано: webApp.setOrientationLock('portrait');
         } else {
           webApp.expand();
         }
@@ -189,5 +191,6 @@ export function useTelegram() {
     debugMessage,
     debugPlatform,
     apiVersion,
+    userId, // Добавлено
   };
 }

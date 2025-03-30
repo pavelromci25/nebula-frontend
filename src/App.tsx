@@ -38,10 +38,9 @@ function App() {
   const [isStatsUnlocked, setIsStatsUnlocked] = useState(false);
   const passwordInputRef = useRef<HTMLInputElement>(null);
 
-  const { isFullscreen, username, photoUrl, isPremium, platform, debugMessage, debugPlatform, apiVersion } = useTelegram();
+  const { isFullscreen, username, photoUrl, isPremium, platform, debugMessage, debugPlatform, apiVersion, userId } = useTelegram();
 
   useEffect(() => {
-    const userId = '6567771093'; // Замени на динамический userId из useTelegram, если нужно
     const fetchData = async () => {
       try {
         // Обновление данных пользователя на сервере
@@ -79,7 +78,6 @@ function App() {
         setGames(gamesData);
       } catch (e) {
         console.error('Ошибка загрузки данных:', e);
-        // Временная заглушка при ошибке
         setGames([
           { id: '1', name: 'Игра 1', type: 'webview', url: 'https://example.com/game1' },
           { id: '2', name: 'Игра 2', type: 'webview', url: 'https://example.com/game2' },
@@ -87,8 +85,8 @@ function App() {
       }
       setIsLoading(false);
     };
-    fetchData();
-  }, [username, photoUrl, isPremium, platform]); // Зависимости от Telegram данных
+    if (userId !== 'guest') fetchData(); // Ждём, пока userId загрузится
+  }, [userId, username, photoUrl, isPremium, platform]);
 
   const handleStatsAccess = () => {
     const correctPassword = 'admin123'; // Замени на свой пароль
