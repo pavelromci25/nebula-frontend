@@ -34,11 +34,11 @@ const BottomMenu: React.FC<BottomMenuProps> = ({ activeTab, setActiveTab }) => {
       </button>
       
       <button
-        className={`menu-item ${activeTab === 'apps' ? 'active' : ''}`}
-        onClick={() => setActiveTab('apps')}
+        className={`menu-item ${activeTab === 'stats' ? 'active' : ''}`}
+        onClick={() => setActiveTab('stats')}
       >
         <FaApple className="menu-icon" />
-        <span>Приложения</span>
+        <span>Статистика</span>
       </button>
       
       <button
