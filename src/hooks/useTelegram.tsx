@@ -104,15 +104,14 @@ export function useTelegram() {
           console.log('Вызываем expand() или requestFullscreen()');
           // Проверяем платформу и применяем соответствующий метод
           if (webApp.platform === 'ios' || webApp.platform === 'android') {
-            // Для iOS и Android используем requestFullscreen из API 8.0
-            webApp.requestFullscreen();
-            // Настраиваем дополнительные параметры
+            webApp.requestFullscreen(); // Для iOS и Android используем requestFullscreen из API 8.0
             webApp.enableClosingConfirmation(); // Подтверждение закрытия
-            webApp.enableVerticalSwipes(); // Вертикальные свайпы
+            webApp.disableVerticalSwipes(); // Устанавливает isVerticalSwipesEnabled в false
             webApp.setOrientationLock('portrait'); // Фиксация ориентации
           } else {
             // Для других платформ (например, weba) используем expand
             webApp.expand();
+            webApp.enableClosingConfirmation(); // Подтверждение закрытия
           }
           setIsFullscreen(webApp.isFullscreen); // Проверяем реальное состояние
 
