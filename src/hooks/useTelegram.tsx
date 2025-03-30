@@ -1,48 +1,115 @@
 import { useState, useEffect } from 'react';
-import { init, retrieveLaunchParams } from '@telegram-apps/sdk';
+import { retrieveLaunchParams } from '@telegram-apps/sdk';
 
 // Тип для данных пользователя
 interface TelegramUser {
   firstName?: string;
+  id?: number;
+  lastName?: string;
+  username?: string;
+  photoUrl?: string;
+  languageCode?: string;
+  isBot?: boolean;
+  isPremium?: boolean;
+}
+
+// Тип для данных чата (если есть)
+interface TelegramChat {
+  id: number;
+  photo_url?: string;
+  type: string;
+  title: string;
+  username?: string;
+}
+
+// Тип для initDataUnsafe (необязательный)
+interface InitDataUnsafe {
+  user?: TelegramUser;
+  chat?: TelegramChat;
+  chat_instance?: string;
+  chat_type?: string;
+  auth_date?: number;
+  hash?: string;
+  query_id?: string;
+  receiver?: TelegramUser;
+  start_param?: string;
+}
+
+// Полный тип для результата retrieveLaunchParams
+interface LaunchParams {
+  initDataUnsafe?: InitDataUnsafe; // Сделали необязательным
+  tgWebAppBotInline?: boolean;
+  tgWebAppData?: string | {
+    auth_date: Date;
+    can_send_after?: number;
+    chat?: TelegramChat;
+    chat_instance?: string;
+    chat_type?: string;
+    hash?: string;
+    query_id?: string;
+    receiver?: TelegramUser;
+    start_param?: string;
+    user?: TelegramUser;
+  };
+  tgWebAppDebug?: boolean;
+  tgWebAppPlatform?: string;
+  tgWebAppShowSettings?: boolean;
+  tgWebAppThemeParams?: Record<string, string>;
+  tgWebAppVersion?: string;
+}
+
+// Интерфейс для Telegram Web App
+interface TelegramWebApp {
+  expand: () => void;
+}
+
+declare global {
+  interface Window {
+    Telegram?: {
+      WebApp: TelegramWebApp;
+    };
+  }
 }
 
 export function useTelegram() {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [username, setUsername] = useState<string>('Гость');
-  const [debugMessage, setDebugMessage] = useState<string>('');
+  const [debugMessage, setDebugMessage] = useState<string>('Инициализация Telegram SDK...');
 
   useEffect(() => {
-    // Проверяем наличие Telegram Web App через window
-    if (window.Telegram?.WebApp) {
-      try {
-        // Инициализируем SDK для отладки
-        init();
+    // Функция для проверки и инициализации Telegram Web App
+    const initializeTelegram = () => {
+      if (window.Telegram && window.Telegram.WebApp) {
+        try {
+          // 1. Открываем приложение на весь экран
+          window.Telegram.WebApp.expand();
+          setIsFullscreen(true);
 
-        // 1. Открываем приложение на весь экран
-        window.Telegram.WebApp.expand();
-        setIsFullscreen(true);
+          // 2. Получаем данные пользователя через SDK
+          const launchParams: LaunchParams = retrieveLaunchParams();
+          const user = launchParams.initDataUnsafe?.user;
+          setUsername(user?.firstName || 'Гость');
 
-        // 2. Получаем данные пользователя через SDK
-        const { initDataUnsafe } = retrieveLaunchParams();
-        let user: TelegramUser | undefined;
-        if (typeof initDataUnsafe === 'object' && initDataUnsafe !== null && 'user' in initDataUnsafe) {
-          user = (initDataUnsafe as { user?: TelegramUser }).user;
-        }
-        if (user && user.firstName) {
-          setUsername(user.firstName);
-        } else {
+          setDebugMessage('Telegram SDK запущен, подключение удачное');
+        } catch (e) {
+          console.error('Ошибка инициализации Telegram SDK:', e);
+          setDebugMessage('Telegram SDK не запущен');
           setUsername('Гость');
         }
-
-        setDebugMessage('Telegram SDK запущен, подключение удачное');
-      } catch (e) {
-        console.error('Ошибка инициализации Telegram SDK:', e);
-        setDebugMessage('Telegram SDK не запущен');
+      } else {
+        setDebugMessage('Telegram SDK не запущен (не в среде Telegram)');
         setUsername('Гость');
       }
-    } else {
-      setDebugMessage('Telegram SDK не запущен (не в среде Telegram)');
-      setUsername('Гость');
+    };
+
+    // Проверяем сразу
+    initializeTelegram();
+
+    // Если скрипт ещё не загрузился, ждём его
+    const script = document.querySelector('script[src="https://telegram.org/js/telegram-web-app.js"]');
+    if (script && !window.Telegram?.WebApp) {
+      script.addEventListener('load', initializeTelegram);
+      return () => script.removeEventListener('load', initializeTelegram);
     }
   }, []);
 
@@ -51,16 +118,4 @@ export function useTelegram() {
     username,     // Имя пользователя
     debugMessage, // Отладочное сообщение
   };
-}
-
-// Декларация типов для window.Telegram.WebApp
-declare global {
-  interface Window {
-    Telegram: {
-      WebApp: {
-        expand: () => void;
-        // Можно добавить другие методы, если понадобятся
-      };
-    };
-  }
 }
