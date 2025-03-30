@@ -36,7 +36,12 @@ function App() {
 
   const API_URL = 'https://nebula-server-ypun.onrender.com';
 
+
+
+
+  
   useEffect(() => {
+
     if (isReady && user) {
       const userId = user.id || 'guest';
 
@@ -79,6 +84,11 @@ function App() {
             photoUrl: user.photoUrl || '',
           });
         });
+
+
+
+
+
 
       // Получение списка игр
       fetch(`${API_URL}/api/games`)

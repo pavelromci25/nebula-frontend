@@ -1,6 +1,14 @@
 import { useState, useEffect } from 'react';
 import { init } from '@telegram-apps/sdk';
 
+// Extend the Window interface to include TelegramWebviewProxy
+declare global {
+  interface Window {
+    TelegramWebviewProxy?: any;
+    referrals?: string[];
+  }
+}
+
 // Интерфейс для данных пользователя
 interface TelegramUser {
   id: string;
@@ -8,6 +16,9 @@ interface TelegramUser {
   lastName?: string;
   username?: string;
   photoUrl?: string;
+  coins?: number;
+  stars?: number;
+  referrals?: string[];
 }
 
 // Интерфейс для SDK
@@ -32,40 +43,38 @@ export function useTelegram() {
 
   useEffect(() => {
     try {
-      // Инициализация SDK с безопасным приведением типа
-      const { ready, expand, initDataUnsafe } = init() as unknown as TelegramSDK;
+      const isTMA = () => typeof window !== 'undefined' && !!window.TelegramWebviewProxy;
+      const sdk = isTMA() ? init() : {
+        ready: () => console.log('Mock ready called'),
+        expand: () => console.log('Mock expand called'),
+        initDataUnsafe: {
+          user: {
+            id: 123,
+            first_name: 'Test',
+            username: 'test_user',
+          },
+        },
+      };
   
-      // Сообщаем Telegram, что приложение готово
-      ready();
+      if (typeof sdk !== 'function' && typeof sdk.ready === 'function') {
+        sdk.ready();
+      } else {
+        console.warn('Метод ready не найден в SDK');
+      }
   
-      // Получаем данные пользователя
-      const telegramUser = initDataUnsafe.user;
+      const telegramUser = typeof sdk !== 'function' ? sdk.initDataUnsafe?.user : undefined;
       if (telegramUser) {
         setUserData({
           id: String(telegramUser.id),
-          firstName: telegramUser.first_name,
-          lastName: telegramUser.last_name,
-          username: telegramUser.username,
-          photoUrl: telegramUser.photo_url,
-        });
-      } else {
-        // Заглушка для тестирования вне Telegram
-        setUserData({
-          id: 'guest',
-          firstName: 'Гость',
+          username: telegramUser.username || 'Гость',
+          coins: 0,
+          stars: 0,
+          referrals: [],
+          photoUrl: '',
         });
       }
-
-      // Устанавливаем полноэкранный режим
-      expand();
-      setIsFullscreen(true);
-
-      setIsReady(true);
     } catch (e) {
       console.error('Ошибка инициализации Telegram SDK:', e);
-      // Заглушка при ошибке
-      setUserData({ id: 'guest', firstName: 'Гость' });
-      setIsReady(true);
     }
   }, []);
 
