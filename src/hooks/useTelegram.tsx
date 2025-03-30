@@ -73,8 +73,8 @@ interface TelegramWebApp {
   disableClosingConfirmation: () => void;
   enableVerticalSwipes: () => void;
   disableVerticalSwipes: () => void;
-  setOrientationLock: (lock: 'portrait' | 'landscape') => void;
-  setOrientationUnlock: () => void;
+  setOrientationLock?: (lock: 'portrait' | 'landscape') => void; // Оставляем опциональным
+  setOrientationUnlock?: () => void;
   onEvent: (event: string, callback: () => void) => void;
   offEvent: (event: string, callback: () => void) => void;
 }
@@ -95,6 +95,7 @@ export function useTelegram() {
   const [platform, setPlatform] = useState<string>('Неизвестно');
   const [debugMessage, setDebugMessage] = useState<string>('Инициализация Telegram SDK...');
   const [debugPlatform, setDebugPlatform] = useState<string>('Ожидание платформы...');
+  const [apiVersion, setApiVersion] = useState<string>('Неизвестно');
 
   // Загрузка данных пользователя
   useEffect(() => {
@@ -116,7 +117,7 @@ export function useTelegram() {
           setPlatform(webApp.platform || 'Неизвестно');
           setDebugPlatform(`Получена платформа: ${webApp.platform || 'Неизвестно'}`);
           setDebugMessage('Telegram SDK запущен, подключение удачное');
-        } catch (e: unknown) { // Используем unknown вместо Error
+        } catch (e: unknown) {
           const errorMessage = e instanceof Error ? e.message : String(e);
           setDebugMessage('Ошибка загрузки данных пользователя: ' + errorMessage);
           setUsername('Гость');
@@ -124,10 +125,12 @@ export function useTelegram() {
           setIsPremium(false);
           setPlatform('Неизвестно');
           setDebugPlatform('Ошибка платформы');
+          setApiVersion('Неизвестно');
         }
       } else {
         setDebugMessage('Telegram SDK не запущен (не в среде Telegram)');
         setDebugPlatform('Telegram Web App недоступен');
+        setApiVersion('Неизвестно');
       }
     };
 
@@ -160,7 +163,7 @@ export function useTelegram() {
           webApp.requestFullscreen();
           webApp.enableClosingConfirmation();
           webApp.disableVerticalSwipes();
-          webApp.setOrientationLock('portrait');
+          // Убрано: webApp.setOrientationLock('portrait');
         } else {
           webApp.expand();
         }
@@ -170,7 +173,7 @@ export function useTelegram() {
         webApp.onEvent('fullscreenFailed', () => {
           setDebugMessage('Не удалось включить полноэкранный режим');
         });
-      } catch (e: unknown) { // Используем unknown вместо Error
+      } catch (e: unknown) {
         const errorMessage = e instanceof Error ? e.message : String(e);
         setDebugMessage('Ошибка настройки полноэкранного режима: ' + errorMessage);
       }
@@ -185,5 +188,6 @@ export function useTelegram() {
     platform,
     debugMessage,
     debugPlatform,
+    apiVersion,
   };
 }
