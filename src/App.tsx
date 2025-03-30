@@ -40,7 +40,11 @@ function App() {
 
   const { isFullscreen, username, photoUrl, isPremium, platform, debugMessage, debugPlatform, apiVersion, userId } = useTelegram();
 
+  // Загрузка данных с сервера
   useEffect(() => {
+    // Показываем индикатор загрузки
+    setIsLoading(true);
+
     const fetchData = async () => {
       try {
         // Обновление данных пользователя на сервере
@@ -82,10 +86,12 @@ function App() {
           { id: '1', name: 'Игра 1', type: 'webview', url: 'https://example.com/game1' },
           { id: '2', name: 'Игра 2', type: 'webview', url: 'https://example.com/game2' },
         ]);
+      } finally {
+        setIsLoading(false); // Убираем индикатор загрузки
       }
-      setIsLoading(false);
     };
-    if (userId !== 'guest') fetchData(); // Ждём, пока userId загрузится
+
+    if (userId !== 'guest') fetchData(); // Ждём userId
   }, [userId, username, photoUrl, isPremium, platform]);
 
   const handleStatsAccess = () => {
@@ -129,6 +135,14 @@ function App() {
       </div>
     );
   };
+
+  if (isLoading) {
+    return (
+      <div className="app-container">
+        <p>Загрузка данных...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="app-container">
