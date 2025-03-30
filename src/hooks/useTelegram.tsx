@@ -3,14 +3,14 @@ import { retrieveLaunchParams } from '@telegram-apps/sdk';
 
 // Тип для данных пользователя
 interface TelegramUser {
-  firstName?: string;
+  first_name?: string; // Исправлено на Telegram-стиль
   id?: number;
-  lastName?: string;
+  last_name?: string;
   username?: string;
-  photoUrl?: string;
-  languageCode?: string;
-  isBot?: boolean;
-  isPremium?: boolean;
+  photo_url?: string; // Исправлено на Telegram-стиль
+  language_code?: string; // Исправлено на Telegram-стиль
+  is_bot?: boolean; // Исправлено на Telegram-стиль
+  is_premium?: boolean; // Исправлено на Telegram-стиль
 }
 
 // Тип для данных чата (если есть)
@@ -94,9 +94,9 @@ export function useTelegram() {
           const user = initDataUnsafe?.user;
           console.log('User (WebApp):', user);
 
-          if (user && user.firstName) {
-            setUsername(user.firstName);
-            console.log('Установлено имя пользователя:', user.firstName);
+          if (user && user.first_name) {
+            setUsername(user.first_name);
+            console.log('Установлено имя пользователя:', user.first_name);
           } else {
             console.warn('Данные пользователя не найдены в initDataUnsafe, используем "Гость"');
             setUsername('Гость');
