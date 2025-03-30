@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { retrieveLaunchParams } from '@telegram-apps/sdk';
 
 interface TelegramUser {
   first_name?: string;
@@ -32,28 +31,6 @@ interface InitDataUnsafe {
   start_param?: string;
 }
 
-interface LaunchParams {
-  initDataUnsafe?: InitDataUnsafe;
-  tgWebAppBotInline?: boolean;
-  tgWebAppData?: string | {
-    auth_date: Date;
-    can_send_after?: number;
-    chat?: TelegramChat;
-    chat_instance?: string;
-    chat_type?: string;
-    hash?: string;
-    query_id?: string;
-    receiver?: TelegramUser;
-    start_param?: string;
-    user?: TelegramUser;
-  };
-  tgWebAppDebug?: boolean;
-  tgWebAppPlatform?: string;
-  tgWebAppShowSettings?: boolean;
-  tgWebAppThemeParams?: Record<string, string>;
-  tgWebAppVersion?: string;
-}
-
 interface TelegramWebApp {
   expand: () => void;
   initDataUnsafe: InitDataUnsafe;
@@ -68,8 +45,6 @@ interface TelegramWebApp {
   disableClosingConfirmation: () => void;
   enableVerticalSwipes: () => void;
   disableVerticalSwipes: () => void;
-  setOrientationLock?: (lock: 'portrait' | 'landscape') => void;
-  setOrientationUnlock?: () => void;
   onEvent: (event: string, callback: () => void) => void;
   offEvent: (event: string, callback: () => void) => void;
 }
@@ -88,48 +63,26 @@ export function useTelegram() {
   const [photoUrl, setPhotoUrl] = useState<string>('');
   const [isPremium, setIsPremium] = useState<boolean>(false);
   const [platform, setPlatform] = useState<string>('Неизвестно');
-  const [debugMessage, setDebugMessage] = useState<string>('Инициализация Telegram SDK...');
-  const [debugPlatform, setDebugPlatform] = useState<string>('Ожидание платформы...');
-  const [apiVersion, setApiVersion] = useState<string>('Неизвестно');
   const [userId, setUserId] = useState<string>('guest');
 
   useEffect(() => {
     const loadUserData = () => {
       if (window.Telegram && window.Telegram.WebApp) {
         const webApp = window.Telegram.WebApp;
-        try {
-          const initDataUnsafe = webApp.initDataUnsafe;
-          const user = initDataUnsafe?.user;
+        const initDataUnsafe = webApp.initDataUnsafe;
+        const user = initDataUnsafe?.user;
 
-          if (user) {
-            setUsername(user.first_name || 'Гость');
-            setPhotoUrl(user.photo_url || '');
-            setIsPremium(user.is_premium || false);
-            setUserId(user.id ? user.id.toString() : 'guest');
-          } else {
-            setUsername('Гость');
-            setUserId('guest');
-          }
-
-          setPlatform(webApp.platform || 'Неизвестно');
-          setDebugPlatform(`Получена платформа: ${webApp.platform || 'Неизвестно'}`);
-          setDebugMessage('Telegram SDK запущен, подключение удачное');
-        } catch (e: unknown) {
-          const errorMessage = e instanceof Error ? e.message : String(e);
-          setDebugMessage('Ошибка загрузки данных пользователя: ' + errorMessage);
+        if (user) {
+          setUsername(user.first_name || 'Гость');
+          setPhotoUrl(user.photo_url || '');
+          setIsPremium(user.is_premium || false);
+          setUserId(user.id ? user.id.toString() : 'guest');
+        } else {
           setUsername('Гость');
-          setPhotoUrl('');
-          setIsPremium(false);
-          setPlatform('Неизвестно');
-          setDebugPlatform('Ошибка платформы');
-          setApiVersion('Неизвестно');
           setUserId('guest');
         }
-      } else {
-        setDebugMessage('Telegram SDK не запущен (не в среде Telegram)');
-        setDebugPlatform('Telegram Web App недоступен');
-        setApiVersion('Неизвестно');
-        setUserId('guest');
+
+        setPlatform(webApp.platform || 'Неизвестно');
       }
     };
 
@@ -146,25 +99,17 @@ export function useTelegram() {
   useEffect(() => {
     if (window.Telegram && window.Telegram.WebApp) {
       const webApp = window.Telegram.WebApp;
-      try {
-        const isMobile = ['ios', 'android'].some((p) => webApp.platform.toLowerCase().includes(p));
-        if (isMobile) {
-          webApp.requestFullscreen();
-          webApp.enableClosingConfirmation();
-          webApp.disableVerticalSwipes();
-        } else {
-          webApp.expand();
-        }
-        setIsFullscreen(webApp.isFullscreen);
-
-        webApp.onEvent('fullscreenChanged', () => setIsFullscreen(webApp.isFullscreen));
-        webApp.onEvent('fullscreenFailed', () => {
-          setDebugMessage('Не удалось включить полноэкранный режим');
-        });
-      } catch (e: unknown) {
-        const errorMessage = e instanceof Error ? e.message : String(e);
-        setDebugMessage('Ошибка настройки полноэкранного режима: ' + errorMessage);
+      const isMobile = ['ios', 'android'].some((p) => webApp.platform.toLowerCase().includes(p));
+      if (isMobile) {
+        webApp.requestFullscreen();
+        webApp.enableClosingConfirmation();
+        webApp.disableVerticalSwipes();
+      } else {
+        webApp.expand();
       }
+      setIsFullscreen(webApp.isFullscreen);
+
+      webApp.onEvent('fullscreenChanged', () => setIsFullscreen(webApp.isFullscreen));
     }
   }, [platform]);
 
@@ -174,9 +119,6 @@ export function useTelegram() {
     photoUrl,
     isPremium,
     platform,
-    debugMessage,
-    debugPlatform,
-    apiVersion,
     userId,
   };
 }

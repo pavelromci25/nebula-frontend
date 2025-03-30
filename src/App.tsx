@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTelegram } from './hooks/useTelegram';
 import UserHeader from './components/UserHeader';
 import BottomMenu from './components/BottomMenu';
@@ -23,7 +23,10 @@ interface Referral {
 }
 
 function App() {
+  // Состояние активной вкладки
   const [activeTab, setActiveTab] = useState('home');
+  
+  // Состояние данных приложения
   const [games, setGames] = useState<Game[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [userData, setUserData] = useState({
@@ -34,17 +37,23 @@ function App() {
     referrals: [] as Referral[],
     photoUrl: '',
   });
-  const [statsPassword, setStatsPassword] = useState<string>('');
-  const [isStatsUnlocked, setIsStatsUnlocked] = useState(false);
-  const passwordInputRef = useRef<HTMLInputElement>(null);
 
-  const { isFullscreen, username, photoUrl, isPremium, platform, debugMessage, debugPlatform, apiVersion, userId } = useTelegram();
+  // Получение данных из Telegram через хук
+  const { isFullscreen, username, photoUrl, isPremium, platform, userId } = useTelegram();
+
+  // Синхронизация данных пользователя из Telegram
+  useEffect(() => {
+    setUserData((prev) => ({
+      ...prev,
+      id: userId,
+      username,
+      photoUrl,
+    }));
+  }, [userId, username, photoUrl]);
 
   // Загрузка данных с сервера
   useEffect(() => {
-    // Показываем индикатор загрузки
     setIsLoading(true);
-
     const fetchData = async () => {
       try {
         // Обновление данных пользователя на сервере
@@ -87,55 +96,14 @@ function App() {
           { id: '2', name: 'Игра 2', type: 'webview', url: 'https://example.com/game2' },
         ]);
       } finally {
-        setIsLoading(false); // Убираем индикатор загрузки
+        setIsLoading(false);
       }
     };
 
-    if (userId !== 'guest') fetchData(); // Ждём userId
+    if (userId !== 'guest') fetchData();
   }, [userId, username, photoUrl, isPremium, platform]);
 
-  const handleStatsAccess = () => {
-    const correctPassword = 'admin123'; // Замени на свой пароль
-    if (statsPassword === correctPassword) {
-      setIsStatsUnlocked(true);
-    } else {
-      alert('Неверный пароль');
-      setStatsPassword('');
-      if (passwordInputRef.current) {
-        passwordInputRef.current.focus();
-      }
-    }
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setStatsPassword(e.target.value);
-  };
-
-  const StatsWrapper = () => {
-    if (isStatsUnlocked) {
-      return <StatsPage />;
-    }
-    return (
-      <div className="content">
-        <h2 className="section-title">Статистика</h2>
-        <div className="card">
-          <h3 className="card-title">Доступ ограничен</h3>
-          <p className="card-text">Введите пароль для просмотра статистики:</p>
-          <input
-            type="password"
-            value={statsPassword}
-            onChange={handlePasswordChange}
-            ref={passwordInputRef}
-            className="input"
-          />
-          <button onClick={handleStatsAccess} className="game-button">
-            Подтвердить
-          </button>
-        </div>
-      </div>
-    );
-  };
-
+  // Отображение индикатора загрузки
   if (isLoading) {
     return (
       <div className="app-container">
@@ -144,29 +112,26 @@ function App() {
     );
   }
 
+  // Основной рендер приложения
   return (
     <div className="app-container">
+      {/* Шапка с данными пользователя */}
       <UserHeader
         username={userData.username}
         coins={userData.coins}
         stars={userData.stars}
         photoUrl={userData.photoUrl}
       />
+      {/* Вкладки приложения */}
       {activeTab === 'home' && (
-        <HomePage
-          debugMessage={debugMessage}
-          isFullscreen={isFullscreen}
-          isPremium={isPremium}
-          platform={platform}
-          debugPlatform={debugPlatform}
-          apiVersion={apiVersion}
-        />
+        <HomePage isFullscreen={isFullscreen} isPremium={isPremium} platform={platform} />
       )}
       {activeTab === 'games' && <GamesPage games={games} />}
       {activeTab === 'profile' && (
         <ProfilePage username={userData.username} coins={userData.coins} stars={userData.stars} />
       )}
-      {activeTab === 'stats' && <StatsWrapper />}
+      {activeTab === 'stats' && <StatsPage />}
+      {/* Навигационное меню */}
       <BottomMenu activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
   );
