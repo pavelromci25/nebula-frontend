@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTelegram } from './hooks/useTelegram';
+import { initializeAppData, updateOnlineCoins } from './components/data';
 import UserHeader from './components/UserHeader';
 import BottomMenu from './components/BottomMenu';
 import HomePage from './components/HomePage';
@@ -8,7 +9,8 @@ import ProfilePage from './components/ProfilePage';
 import StatsPage from './components/StatsPage';
 import './App.css';
 
-interface Game {
+// Экспортируем интерфейс Game
+export interface Game {
   id: string;
   name: string;
   type: string;
@@ -17,7 +19,8 @@ interface Game {
   description?: string;
 }
 
-interface Referral {
+// Экспортируем интерфейс Referral
+export interface Referral {
   telegramId: string;
   username: string;
 }
@@ -36,7 +39,17 @@ function App() {
     stars: 0,
     referrals: [] as Referral[],
     photoUrl: '',
+    firstLogin: new Date().toISOString(),
+    lastLogin: new Date().toISOString(),
+    platforms: [] as string[],
+    onlineStatus: 'offline',
   });
+  const [inventoryData, setInventoryData] = useState({
+    userId: 'guest',
+    coins: 0,
+    telegramStars: 0,
+  });
+  const [error, setError] = useState<string | null>(null);
 
   // Получение данных из Telegram через хук
   const { isFullscreen, username, photoUrl, isPremium, platform, userId } = useTelegram();
@@ -51,63 +64,54 @@ function App() {
     }));
   }, [userId, username, photoUrl]);
 
-  // Загрузка данных с сервера
+  // Инициализация данных с сервера
   useEffect(() => {
     setIsLoading(true);
-    const fetchData = async () => {
-      try {
-        // Обновление данных пользователя на сервере
-        const updateResponse = await fetch('https://nebula-server-ypun.onrender.com/api/user/update', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            userId,
-            username,
-            photoUrl,
-            platform,
-            isPremium,
-            coins: userData.coins,
-            stars: userData.stars,
-            referrals: userData.referrals,
-          }),
-        });
-        const updatedUser = await updateResponse.json();
-
-        // Получение данных пользователя
-        const userResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/user/${userId}`);
-        const userDataFromServer = await userResponse.json();
-        setUserData({
-          id: userDataFromServer.userId,
-          username: userDataFromServer.username,
-          photoUrl: userDataFromServer.photoUrl || '',
-          coins: userDataFromServer.coins || 0,
-          stars: userDataFromServer.stars || 0,
-          referrals: userDataFromServer.referrals || [],
-        });
-
-        // Получение списка игр
-        const gamesResponse = await fetch('https://nebula-server-ypun.onrender.com/api/games');
-        const gamesData = await gamesResponse.json();
-        setGames(gamesData);
-      } catch (e) {
-        console.error('Ошибка загрузки данных:', e);
-        setGames([
-          { id: '1', name: 'Игра 1', type: 'webview', url: 'https://example.com/game1' },
-          { id: '2', name: 'Игра 2', type: 'webview', url: 'https://example.com/game2' },
-        ]);
-      } finally {
-        setIsLoading(false);
-      }
+    const loadData = async () => {
+      const appData = await initializeAppData(
+        { userId, username, photoUrl, platform, isPremium },
+        userData
+      );
+      setUserData(appData.userData);
+      setInventoryData(appData.inventoryData);
+      setGames(appData.games);
+      setError(appData.error || null);
+      setIsLoading(false);
     };
-
-    if (userId !== 'guest') fetchData();
+    if (userId !== 'guest') loadData();
   }, [userId, username, photoUrl, isPremium, platform]);
 
-  // Отображение индикатора загрузки
+  // Начисление монет за онлайн каждые 20 секунд
+  useEffect(() => {
+    if (userId === 'guest' || error) return; // Не начисляем, если нет пользователя или ошибка
+
+    const interval = setInterval(async () => {
+      const updatedInventory = await updateOnlineCoins(userId, inventoryData.coins);
+      setInventoryData(updatedInventory);
+      setUserData((prev) => ({
+        ...prev,
+        coins: updatedInventory.coins,
+        onlineStatus: 'online', // Обновляем статус
+      }));
+    }, 20000); // 20 секунд
+
+    return () => clearInterval(interval); // Очистка интервала при размонтировании
+  }, [userId, inventoryData.coins, error]);
+
+  // Отображение индикатора загрузки или ошибки
   if (isLoading) {
     return (
       <div className="app-container">
         <p>Загрузка данных...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="app-container">
+        <p>Ошибка: {error}</p>
+        {games.length === 0 && <p>Игры не доступны</p>}
       </div>
     );
   }
