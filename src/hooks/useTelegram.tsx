@@ -94,87 +94,53 @@ export function useTelegram() {
   const [isPremium, setIsPremium] = useState<boolean>(false);
   const [platform, setPlatform] = useState<string>('Неизвестно');
   const [debugMessage, setDebugMessage] = useState<string>('Инициализация Telegram SDK...');
+  const [debugPlatform, setDebugPlatform] = useState<string>('Ожидание платформы...');
 
+  // Загрузка данных пользователя
   useEffect(() => {
-    const initializeTelegram = () => {
-      console.log('Проверка window.Telegram:', window.Telegram);
+    const loadUserData = () => {
       if (window.Telegram && window.Telegram.WebApp) {
         const webApp = window.Telegram.WebApp;
         try {
-          // Сначала загружаем данные пользователя
           const initDataUnsafe = webApp.initDataUnsafe;
-          console.log('Init Data Unsafe (WebApp):', initDataUnsafe);
           const user = initDataUnsafe?.user;
-          console.log('User (WebApp):', user);
 
           if (user) {
             setUsername(user.first_name || 'Гость');
             setPhotoUrl(user.photo_url || '');
             setIsPremium(user.is_premium || false);
           } else {
-            console.warn('Данные пользователя не найдены в initDataUnsafe, используем "Гость"');
             setUsername('Гость');
           }
 
           setPlatform(webApp.platform || 'Неизвестно');
+          setDebugPlatform(`Получена платформа: ${webApp.platform || 'Неизвестно'}`);
           setDebugMessage('Telegram SDK запущен, подключение удачное');
-
-          // Затем настраиваем полноэкранный режим
-          console.log('Платформа:', webApp.platform);
-          const isMobile = ['ios', 'android'].some((p) => webApp.platform.toLowerCase().includes(p));
-          if (isMobile) {
-            console.log('Запускаем requestFullscreen для мобильной платформы');
-            webApp.requestFullscreen();
-            webApp.enableClosingConfirmation();
-            webApp.disableVerticalSwipes();
-            webApp.setOrientationLock('portrait');
-          } else {
-            console.log('Запускаем expand для не-мобильной платформы');
-            webApp.expand();
-          }
-          setIsFullscreen(webApp.isFullscreen);
-
-          // Отладка событий
-          webApp.onEvent('fullscreenChanged', () => {
-            console.log('Событие fullscreenChanged:', webApp.isFullscreen);
-            setIsFullscreen(webApp.isFullscreen);
-          });
-          webApp.onEvent('fullscreenFailed', () => {
-            console.warn('Не удалось включить полноэкранный режим');
-            setDebugMessage('Не удалось включить полноэкранный режим');
-          });
-        } catch (e) {
-          console.error('Ошибка инициализации Telegram SDK:', e);
-          setDebugMessage('Telegram SDK не запущен');
+        } catch (e: unknown) { // Используем unknown вместо Error
+          const errorMessage = e instanceof Error ? e.message : String(e);
+          setDebugMessage('Ошибка загрузки данных пользователя: ' + errorMessage);
           setUsername('Гость');
           setPhotoUrl('');
           setIsPremium(false);
           setPlatform('Неизвестно');
+          setDebugPlatform('Ошибка платформы');
         }
       } else {
         setDebugMessage('Telegram SDK не запущен (не в среде Telegram)');
-        setUsername('Гость');
-        setPhotoUrl('');
-        setIsPremium(false);
-        setPlatform('Неизвестно');
-        console.log('Telegram Web App недоступен');
+        setDebugPlatform('Telegram Web App недоступен');
       }
     };
 
-    initializeTelegram();
+    loadUserData();
 
     const script = document.querySelector('script[src="https://telegram.org/js/telegram-web-app.js"]');
     if (script && !window.Telegram?.WebApp) {
-      console.log('Ждём загрузки telegram-web-app.js');
-      const loadHandler = () => {
-        console.log('Скрипт загружен, повторяем инициализацию');
-        initializeTelegram();
-      };
+      const loadHandler = () => loadUserData();
       script.addEventListener('load', loadHandler);
       const timeout = setTimeout(() => {
-        console.warn('Скрипт не загрузился вовремя');
         if (!window.Telegram?.WebApp) {
           setDebugMessage('Telegram SDK не загрузился');
+          setDebugPlatform('Скрипт не загрузился');
         }
       }, 5000);
       return () => {
@@ -184,6 +150,33 @@ export function useTelegram() {
     }
   }, []);
 
+  // Настройка полноэкранного режима
+  useEffect(() => {
+    if (window.Telegram && window.Telegram.WebApp) {
+      const webApp = window.Telegram.WebApp;
+      try {
+        const isMobile = ['ios', 'android'].some((p) => webApp.platform.toLowerCase().includes(p));
+        if (isMobile) {
+          webApp.requestFullscreen();
+          webApp.enableClosingConfirmation();
+          webApp.disableVerticalSwipes();
+          webApp.setOrientationLock('portrait');
+        } else {
+          webApp.expand();
+        }
+        setIsFullscreen(webApp.isFullscreen);
+
+        webApp.onEvent('fullscreenChanged', () => setIsFullscreen(webApp.isFullscreen));
+        webApp.onEvent('fullscreenFailed', () => {
+          setDebugMessage('Не удалось включить полноэкранный режим');
+        });
+      } catch (e: unknown) { // Используем unknown вместо Error
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        setDebugMessage('Ошибка настройки полноэкранного режима: ' + errorMessage);
+      }
+    }
+  }, [platform]);
+
   return {
     isFullscreen,
     username,
@@ -191,5 +184,6 @@ export function useTelegram() {
     isPremium,
     platform,
     debugMessage,
+    debugPlatform,
   };
 }

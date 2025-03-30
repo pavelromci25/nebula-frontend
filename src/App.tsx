@@ -32,7 +32,7 @@ function App() {
     photoUrl: '',
   });
 
-  const { isFullscreen, username, photoUrl, isPremium, platform, debugMessage } = useTelegram();
+  const { isFullscreen, username, photoUrl, isPremium, platform, debugMessage, debugPlatform } = useTelegram();
 
   useEffect(() => {
     setUserData((prev) => ({
@@ -62,6 +62,7 @@ function App() {
           <p className="card-text">Полноэкранный режим: {isFullscreen ? 'Включён' : 'Выключен'}</p>
           {isPremium && <p className="card-text">Поздравляем, Вы Премиум</p>}
           <p className="card-text">Вы используете {platform}</p>
+          <p className="card-text">Отладка платформы: {debugPlatform}</p> {/* Добавлено */}
         </div>
       </section>
 
