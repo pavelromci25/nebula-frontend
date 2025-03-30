@@ -10,6 +10,21 @@ interface TelegramUser {
   photoUrl?: string;
 }
 
+// Интерфейс для SDK
+interface TelegramSDK {
+  ready: () => void;
+  expand: () => void;
+  initDataUnsafe: {
+    user?: {
+      id: number;
+      first_name: string;
+      last_name?: string;
+      username?: string;
+      photo_url?: string;
+    };
+  };
+}
+
 export function useTelegram() {
   const [isReady, setIsReady] = useState(false);
   const [userData, setUserData] = useState<TelegramUser | null>(null);
@@ -17,12 +32,12 @@ export function useTelegram() {
 
   useEffect(() => {
     try {
-      // Инициализация SDK
-      const { ready, expand, initDataUnsafe } = init();
-
+      // Инициализация SDK с безопасным приведением типа
+      const { ready, expand, initDataUnsafe } = init() as unknown as TelegramSDK;
+  
       // Сообщаем Telegram, что приложение готово
       ready();
-
+  
       // Получаем данные пользователя
       const telegramUser = initDataUnsafe.user;
       if (telegramUser) {
