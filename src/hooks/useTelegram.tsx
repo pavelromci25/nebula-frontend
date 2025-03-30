@@ -61,6 +61,7 @@ interface LaunchParams {
 // Интерфейс для Telegram Web App
 interface TelegramWebApp {
   expand: () => void;
+  initDataUnsafe: InitDataUnsafe;
 }
 
 declare global {
@@ -85,20 +86,22 @@ export function useTelegram() {
           window.Telegram.WebApp.expand();
           setIsFullscreen(true);
 
-          // 2. Получаем данные пользователя через SDK
-          const launchParams: LaunchParams = retrieveLaunchParams();
-          console.log('Launch Params:', launchParams); // Отладка полного объекта
-          const initDataUnsafe = launchParams.initDataUnsafe;
-          console.log('Init Data Unsafe:', initDataUnsafe); // Отладка initDataUnsafe
+          // 2. Получаем данные пользователя напрямую из Telegram Web App
+          const initDataUnsafe = window.Telegram.WebApp.initDataUnsafe;
+          console.log('Init Data Unsafe (WebApp):', initDataUnsafe); // Отладка
           const user = initDataUnsafe?.user;
-          console.log('User:', user); // Отладка данных пользователя
+          console.log('User (WebApp):', user); // Отладка
 
           if (user && user.firstName) {
             setUsername(user.firstName);
           } else {
-            console.warn('User data not found, falling back to "Гость"');
+            console.warn('User data not found in WebApp, falling back to "Гость"');
             setUsername('Гость');
           }
+
+          // Дополнительно: проверяем retrieveLaunchParams для отладки
+          const launchParams: LaunchParams = retrieveLaunchParams();
+          console.log('Launch Params (SDK):', launchParams);
 
           setDebugMessage('Telegram SDK запущен, подключение удачное');
         } catch (e) {
