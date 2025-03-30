@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useTelegram } from './hooks/useTelegram';
 import UserHeader from './components/UserHeader';
 import BottomMenu from './components/BottomMenu';
@@ -34,38 +34,35 @@ function App() {
     referrals: [] as Referral[],
     photoUrl: '',
   });
-  const [statsPassword, setStatsPassword] = useState<string>(''); // Пароль для статистики
-  const [isStatsUnlocked, setIsStatsUnlocked] = useState(false); // Разрешён ли доступ
+  const [statsPassword, setStatsPassword] = useState<string>('');
+  const [isStatsUnlocked, setIsStatsUnlocked] = useState(false);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
 
   const { isFullscreen, username, photoUrl, isPremium, platform, debugMessage, debugPlatform, apiVersion } = useTelegram();
 
   useEffect(() => {
-    setUserData((prev) => ({
-      ...prev,
-      id: 'guest', // Здесь будет userId из Telegram или базы
-      username: username,
-      photoUrl: photoUrl,
-      // coins: Будет из базы
-      // stars: Будет из базы
-    }));
-  }, [username, photoUrl]);
-
-  useEffect(() => {
-    // Временная заглушка для игр
-    setTimeout(() => {
-      setGames([
-        { id: '1', name: 'Игра 1', type: 'webview', url: 'https://example.com/game1' },
-        { id: '2', name: 'Игра 2', type: 'webview', url: 'https://example.com/game2' },
-      ]);
-      setIsLoading(false);
-    }, 1000);
-
-    // Закомментированное место для подключения к базе данных
-    /*
+    const userId = '6567771093'; // Замени на динамический userId из useTelegram, если нужно
     const fetchData = async () => {
       try {
+        // Обновление данных пользователя на сервере
+        const updateResponse = await fetch('https://nebula-server-ypun.onrender.com/api/user/update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            username,
+            photoUrl,
+            platform,
+            isPremium,
+            coins: userData.coins,
+            stars: userData.stars,
+            referrals: userData.referrals,
+          }),
+        });
+        const updatedUser = await updateResponse.json();
+
         // Получение данных пользователя
-        const userResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/user/${userData.id}`);
+        const userResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/user/${userId}`);
         const userDataFromServer = await userResponse.json();
         setUserData({
           id: userDataFromServer.userId,
@@ -82,20 +79,32 @@ function App() {
         setGames(gamesData);
       } catch (e) {
         console.error('Ошибка загрузки данных:', e);
+        // Временная заглушка при ошибке
+        setGames([
+          { id: '1', name: 'Игра 1', type: 'webview', url: 'https://example.com/game1' },
+          { id: '2', name: 'Игра 2', type: 'webview', url: 'https://example.com/game2' },
+        ]);
       }
       setIsLoading(false);
     };
     fetchData();
-    */
-  }, []);
+  }, [username, photoUrl, isPremium, platform]); // Зависимости от Telegram данных
 
   const handleStatsAccess = () => {
-    const correctPassword = 'admin123'; // Временный пароль (замени на свой)
+    const correctPassword = 'admin123'; // Замени на свой пароль
     if (statsPassword === correctPassword) {
       setIsStatsUnlocked(true);
     } else {
       alert('Неверный пароль');
+      setStatsPassword('');
+      if (passwordInputRef.current) {
+        passwordInputRef.current.focus();
+      }
     }
+  };
+
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStatsPassword(e.target.value);
   };
 
   const StatsWrapper = () => {
@@ -111,7 +120,8 @@ function App() {
           <input
             type="password"
             value={statsPassword}
-            onChange={(e) => setStatsPassword(e.target.value)}
+            onChange={handlePasswordChange}
+            ref={passwordInputRef}
             className="input"
           />
           <button onClick={handleStatsAccess} className="game-button">
