@@ -80,22 +80,25 @@ export function useTelegram() {
   useEffect(() => {
     // Функция для проверки и инициализации Telegram Web App
     const initializeTelegram = () => {
+      console.log('Проверка window.Telegram:', window.Telegram);
       if (window.Telegram && window.Telegram.WebApp) {
         try {
           // 1. Открываем приложение на весь экран
+          console.log('Вызываем expand()');
           window.Telegram.WebApp.expand();
           setIsFullscreen(true);
 
           // 2. Получаем данные пользователя напрямую из Telegram Web App
           const initDataUnsafe = window.Telegram.WebApp.initDataUnsafe;
-          console.log('Init Data Unsafe (WebApp):', initDataUnsafe); // Отладка
+          console.log('Init Data Unsafe (WebApp):', initDataUnsafe);
           const user = initDataUnsafe?.user;
-          console.log('User (WebApp):', user); // Отладка
+          console.log('User (WebApp):', user);
 
           if (user && user.firstName) {
             setUsername(user.firstName);
+            console.log('Установлено имя пользователя:', user.firstName);
           } else {
-            console.warn('User data not found in WebApp, falling back to "Гость"');
+            console.warn('Данные пользователя не найдены в initDataUnsafe, используем "Гость"');
             setUsername('Гость');
           }
 
@@ -112,6 +115,7 @@ export function useTelegram() {
       } else {
         setDebugMessage('Telegram SDK не запущен (не в среде Telegram)');
         setUsername('Гость');
+        console.log('Telegram Web App недоступен');
       }
     };
 
@@ -121,6 +125,7 @@ export function useTelegram() {
     // Если скрипт ещё не загрузился, ждём его
     const script = document.querySelector('script[src="https://telegram.org/js/telegram-web-app.js"]');
     if (script && !window.Telegram?.WebApp) {
+      console.log('Ждём загрузки telegram-web-app.js');
       script.addEventListener('load', initializeTelegram);
       return () => script.removeEventListener('load', initializeTelegram);
     }
