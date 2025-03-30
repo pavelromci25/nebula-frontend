@@ -37,7 +37,7 @@ interface InitDataUnsafe {
 
 // Полный тип для результата retrieveLaunchParams
 interface LaunchParams {
-  initDataUnsafe?: InitDataUnsafe; // Сделали необязательным
+  initDataUnsafe?: InitDataUnsafe;
   tgWebAppBotInline?: boolean;
   tgWebAppData?: string | {
     auth_date: Date;
@@ -87,8 +87,18 @@ export function useTelegram() {
 
           // 2. Получаем данные пользователя через SDK
           const launchParams: LaunchParams = retrieveLaunchParams();
-          const user = launchParams.initDataUnsafe?.user;
-          setUsername(user?.firstName || 'Гость');
+          console.log('Launch Params:', launchParams); // Отладка полного объекта
+          const initDataUnsafe = launchParams.initDataUnsafe;
+          console.log('Init Data Unsafe:', initDataUnsafe); // Отладка initDataUnsafe
+          const user = initDataUnsafe?.user;
+          console.log('User:', user); // Отладка данных пользователя
+
+          if (user && user.firstName) {
+            setUsername(user.firstName);
+          } else {
+            console.warn('User data not found, falling back to "Гость"');
+            setUsername('Гость');
+          }
 
           setDebugMessage('Telegram SDK запущен, подключение удачное');
         } catch (e) {
