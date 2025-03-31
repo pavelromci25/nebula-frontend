@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTelegram } from './hooks/useTelegram';
-import { initializeAppData } from './components/data';
+import { initializeAppData, updateOnlineCoins } from './components/data';
 import UserHeader from './components/UserHeader';
 import BottomMenu from './components/BottomMenu';
 import HomePage from './components/HomePage';
@@ -70,6 +70,18 @@ function App() {
     };
     if (userId !== 'guest') loadData();
   }, [userId, username, photoUrl, isPremium, platform]);
+
+  // Начисление монет каждые 10 секунд на фронтенде
+  useEffect(() => {
+    if (userId === 'guest' || error) return;
+
+    const interval = setInterval(async () => {
+      const updatedInventory = await updateOnlineCoins(userId, inventoryData.coins);
+      setInventoryData(updatedInventory);
+    }, 10000); // 10 секунд
+
+    return () => clearInterval(interval);
+  }, [userId, inventoryData.coins, error]);
 
   if (isLoading) {
     return (

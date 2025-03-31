@@ -106,3 +106,23 @@ export const initializeAppData = async (
     };
   }
 };
+
+export const updateOnlineCoins = async (userId: string, currentCoins: number): Promise<InventoryData> => {
+  try {
+    const response = await fetch('https://nebula-server-ypun.onrender.com/api/inventory/update', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userId,
+        coins: currentCoins + 1,
+        stars: 0,
+        telegramStars: 0,
+      }),
+    });
+    if (!response.ok) throw new Error('Ошибка обновления монет');
+    return response.json();
+  } catch (e) {
+    console.error('Ошибка обновления монет:', e);
+    return { userId, coins: currentCoins, stars: 0, telegramStars: 0, lastCoinUpdate: new Date().toISOString() };
+  }
+};
