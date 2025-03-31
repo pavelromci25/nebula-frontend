@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTelegram } from './hooks/useTelegram';
-import { initializeAppData, updateOnlineCoins } from './components/data';
+import { initializeAppData } from './components/data';
 import UserHeader from './components/UserHeader';
 import BottomMenu from './components/BottomMenu';
 import HomePage from './components/HomePage';
@@ -36,12 +36,14 @@ function App() {
     lastLogin: new Date().toISOString(),
     platforms: [] as string[],
     onlineStatus: 'offline',
+    loginCount: 0,
   });
   const [inventoryData, setInventoryData] = useState({
     userId: 'guest',
     coins: 0,
     stars: 0,
     telegramStars: 0,
+    lastCoinUpdate: new Date().toISOString(),
   });
   const [error, setError] = useState<string | null>(null);
 
@@ -69,26 +71,6 @@ function App() {
     if (userId !== 'guest') loadData();
   }, [userId, username, photoUrl, isPremium, platform]);
 
-  useEffect(() => {
-    if (userId === 'guest' || error) return;
-
-    const interval = setInterval(async () => {
-      const updatedInventory = await updateOnlineCoins(userId, inventoryData.coins);
-      setInventoryData(updatedInventory);
-      // Обновляем только монеты в UI, остальные данные из Inventory не трогаем
-      await fetch('https://nebula-server-ypun.onrender.com/api/user/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId,
-          onlineStatus: 'online',
-        }),
-      });
-    }, 20000);
-
-    return () => clearInterval(interval);
-  }, [userId, inventoryData.coins, error]);
-
   if (isLoading) {
     return (
       <div className="app-container">
@@ -110,8 +92,8 @@ function App() {
     <div className="app-container">
       <UserHeader
         username={userData.username}
-        coins={inventoryData.coins} // Используем coins из Inventory
-        stars={inventoryData.stars} // Используем stars из Inventory
+        coins={inventoryData.coins}
+        stars={inventoryData.stars}
         photoUrl={userData.photoUrl}
       />
       {activeTab === 'home' && (

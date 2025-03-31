@@ -9,6 +9,7 @@ interface UserData {
   lastLogin: string;
   platforms: string[];
   onlineStatus: string;
+  loginCount: number;
 }
 
 interface InventoryData {
@@ -16,6 +17,7 @@ interface InventoryData {
   coins: number;
   stars: number;
   telegramStars: number;
+  lastCoinUpdate: string;
 }
 
 interface TelegramData {
@@ -47,7 +49,6 @@ export const initializeAppData = async (
         photoUrl: telegramData.photoUrl,
         platform: telegramData.platform,
         isPremium: telegramData.isPremium,
-        onlineStatus: 'online',
       }),
     });
     if (!updateUserResponse.ok) throw new Error('Ошибка обновления данных пользователя');
@@ -91,35 +92,17 @@ export const initializeAppData = async (
         lastLogin: new Date().toISOString(),
         platforms: [telegramData.platform],
         onlineStatus: 'offline',
+        loginCount: 0,
       },
       inventoryData: {
         userId: telegramData.userId,
         coins: 0,
         stars: 0,
         telegramStars: 0,
+        lastCoinUpdate: new Date().toISOString(),
       },
       games: [],
       error: e instanceof Error ? e.message : 'Неизвестная ошибка',
     };
-  }
-};
-
-export const updateOnlineCoins = async (userId: string, currentCoins: number): Promise<InventoryData> => {
-  try {
-    const response = await fetch('https://nebula-server-ypun.onrender.com/api/inventory/update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId,
-        coins: currentCoins + 1,
-        stars: 0,
-        telegramStars: 0,
-      }),
-    });
-    if (!response.ok) throw new Error('Ошибка обновления монет');
-    return response.json();
-  } catch (e) {
-    console.error('Ошибка обновления монет:', e);
-    return { userId, coins: currentCoins, stars: 0, telegramStars: 0 };
   }
 };
