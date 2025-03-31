@@ -3,10 +3,8 @@ import { Game, Referral } from '../App';
 interface UserData {
   id: string;
   username: string;
-  coins: number;
-  stars: number;
-  referrals: Referral[];
   photoUrl: string;
+  referrals: Referral[];
   firstLogin: string;
   lastLogin: string;
   platforms: string[];
@@ -16,6 +14,7 @@ interface UserData {
 interface InventoryData {
   userId: string;
   coins: number;
+  stars: number;
   telegramStars: number;
 }
 
@@ -35,8 +34,7 @@ interface AppData {
 }
 
 export const initializeAppData = async (
-  telegramData: TelegramData,
-  currentUserData: UserData
+  telegramData: TelegramData
 ): Promise<AppData> => {
   try {
     // Обновление данных пользователя на сервере
@@ -49,27 +47,31 @@ export const initializeAppData = async (
         photoUrl: telegramData.photoUrl,
         platform: telegramData.platform,
         isPremium: telegramData.isPremium,
-        coins: currentUserData.coins,
-        stars: currentUserData.stars,
-        referrals: currentUserData.referrals,
-        onlineStatus: 'online', // Устанавливаем онлайн-статус при входе
+        onlineStatus: 'online',
       }),
     });
     if (!updateUserResponse.ok) throw new Error('Ошибка обновления данных пользователя');
     const userData = await updateUserResponse.json();
 
-    // Обновление инвентаря пользователя
-    const updateInventoryResponse = await fetch('https://nebula-server-ypun.onrender.com/api/inventory/update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: telegramData.userId,
-        coins: currentUserData.coins,
-        telegramStars: 0, // Пока статично, позже добавим донаты
-      }),
-    });
-    if (!updateInventoryResponse.ok) throw new Error('Ошибка обновления инвентаря');
-    const inventoryData = await updateInventoryResponse.json();
+    // Получение или создание инвентаря
+    const inventoryResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/inventory/${telegramData.userId}`);
+    let inventoryData;
+    if (inventoryResponse.ok) {
+      inventoryData = await inventoryResponse.json();
+    } else {
+      const initInventoryResponse = await fetch('https://nebula-server-ypun.onrender.com/api/inventory/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: telegramData.userId,
+          coins: 0,
+          stars: 0,
+          telegramStars: 0,
+        }),
+      });
+      if (!initInventoryResponse.ok) throw new Error('Ошибка создания инвентаря');
+      inventoryData = await initInventoryResponse.json();
+    }
 
     // Получение списка игр
     const gamesResponse = await fetch('https://nebula-server-ypun.onrender.com/api/games');
@@ -84,8 +86,6 @@ export const initializeAppData = async (
         id: telegramData.userId,
         username: telegramData.username,
         photoUrl: telegramData.photoUrl || '',
-        coins: 0,
-        stars: 0,
         referrals: [],
         firstLogin: new Date().toISOString(),
         lastLogin: new Date().toISOString(),
@@ -95,6 +95,7 @@ export const initializeAppData = async (
       inventoryData: {
         userId: telegramData.userId,
         coins: 0,
+        stars: 0,
         telegramStars: 0,
       },
       games: [],
@@ -103,7 +104,6 @@ export const initializeAppData = async (
   }
 };
 
-// Обновление монет за онлайн
 export const updateOnlineCoins = async (userId: string, currentCoins: number): Promise<InventoryData> => {
   try {
     const response = await fetch('https://nebula-server-ypun.onrender.com/api/inventory/update', {
@@ -111,7 +111,8 @@ export const updateOnlineCoins = async (userId: string, currentCoins: number): P
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         userId,
-        coins: currentCoins + 1, // Добавляем 1 монету
+        coins: currentCoins + 1,
+        stars: 0,
         telegramStars: 0,
       }),
     });
@@ -119,6 +120,6 @@ export const updateOnlineCoins = async (userId: string, currentCoins: number): P
     return response.json();
   } catch (e) {
     console.error('Ошибка обновления монет:', e);
-    return { userId, coins: currentCoins, telegramStars: 0 };
+    return { userId, coins: currentCoins, stars: 0, telegramStars: 0 };
   }
 };
