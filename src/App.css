@@ -993,3 +993,26 @@ input:checked + .switch-slider:before {
     transform: translateX(0);
   }
 }
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 600px) {
+  .user-header {
+    top: 40px; /* Опускаем шапку на 40px ниже */
+    padding-top: calc(12px + env(safe-area-inset-top, 0px)); /* Учитываем вырез */
+  }
+
+  .content {
+    margin-top: calc(var(--header-height) + 40px + env(safe-area-inset-top, 0px)); /* Увеличиваем отступ для контента */
+  }
+
+  .bottom-menu {
+    bottom: 10px; /* Приподнимаем меню на 10px */
+    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); /* Учитываем нижний вырез */
+  }
+}
+
+/* Обновление переменных для консистентности (опционально) */
+:root {
+  --header-height: 60px;
+  --bottom-menu-height: 70px;
+}
