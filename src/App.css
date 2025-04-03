@@ -1006,8 +1006,8 @@ input:checked + .switch-slider:before {
   }
 
   .bottom-menu {
-    bottom: 2px; /* Приподнимаем меню на 10px */
-    padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); /* Учитываем нижний вырез */
+    bottom: 1px; /* Приподнимаем меню на 10px */
+    padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px)); /* Учитываем нижний вырез */
   }
 }
 
