@@ -997,8 +997,8 @@ input:checked + .switch-slider:before {
 /* Адаптивность для мобильных устройств */
 @media (max-width: 600px) {
   .user-header {
-    top: 40px; /* Опускаем шапку на 40px ниже */
-    padding-top: calc(12px + env(safe-area-inset-top, 0px)); /* Учитываем вырез */
+    top: 30px; /* Опускаем шапку на 40px ниже */
+    padding-top: calc(15px + env(safe-area-inset-top, 0px)); /* Учитываем вырез */
   }
 
   .content {
@@ -1006,7 +1006,7 @@ input:checked + .switch-slider:before {
   }
 
   .bottom-menu {
-    bottom: 10px; /* Приподнимаем меню на 10px */
+    bottom: 2px; /* Приподнимаем меню на 10px */
     padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); /* Учитываем нижний вырез */
   }
 }
