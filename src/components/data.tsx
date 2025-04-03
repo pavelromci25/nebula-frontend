@@ -39,42 +39,58 @@ export const initializeAppData = async (
   telegramData: TelegramData
 ): Promise<AppData> => {
   try {
-    // Обновление данных пользователя на сервере
-    const updateUserResponse = await fetch('https://nebula-server-ypun.onrender.com/api/user/update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId: telegramData.userId,
-        username: telegramData.username,
-        photoUrl: telegramData.photoUrl,
-        platform: telegramData.platform,
-        isPremium: telegramData.isPremium,
-      }),
-    });
-    if (!updateUserResponse.ok) throw new Error('Ошибка обновления данных пользователя');
-    const userData = await updateUserResponse.json();
+    const { userId } = telegramData;
 
-    // Получение или создание инвентаря
-    const inventoryResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/inventory/${telegramData.userId}`);
+    // 1. Проверка существования пользователя
+    const userResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/user/${userId}`);
+    let userData;
+    if (userResponse.ok) {
+      userData = await userResponse.json();
+    } else if (userResponse.status === 404) {
+      // Создание нового пользователя
+      const newUser = {
+        userId,
+        username: telegramData.username || 'Гость',
+        photoUrl: telegramData.photoUrl || '',
+        platform: telegramData.platform || 'Неизвестно',
+        isPremium: telegramData.isPremium || false,
+      };
+      const createUserResponse = await fetch('https://nebula-server-ypun.onrender.com/api/user/update', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newUser),
+      });
+      if (!createUserResponse.ok) throw new Error('Ошибка создания пользователя');
+      userData = await createUserResponse.json();
+    } else {
+      throw new Error('Ошибка загрузки данных пользователя');
+    }
+
+    // 2. Проверка и загрузка инвентаря
+    const inventoryResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/inventory/${userId}`);
     let inventoryData;
     if (inventoryResponse.ok) {
       inventoryData = await inventoryResponse.json();
-    } else {
-      const initInventoryResponse = await fetch('https://nebula-server-ypun.onrender.com/api/inventory/update', {
+    } else if (inventoryResponse.status === 404) {
+      // Создание нового инвентаря
+      const newInventory = {
+        userId,
+        coins: 0,
+        stars: 0,
+        telegramStars: 0,
+      };
+      const createInventoryResponse = await fetch('https://nebula-server-ypun.onrender.com/api/inventory/update', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          userId: telegramData.userId,
-          coins: 0,
-          stars: 0,
-          telegramStars: 0,
-        }),
+        body: JSON.stringify(newInventory),
       });
-      if (!initInventoryResponse.ok) throw new Error('Ошибка создания инвентаря');
-      inventoryData = await initInventoryResponse.json();
+      if (!createInventoryResponse.ok) throw new Error('Ошибка создания инвентаря');
+      inventoryData = await createInventoryResponse.json();
+    } else {
+      throw new Error('Ошибка загрузки инвентаря');
     }
 
-    // Получение списка игр
+    // 3. Получение списка игр
     const gamesResponse = await fetch('https://nebula-server-ypun.onrender.com/api/games');
     if (!gamesResponse.ok) throw new Error('Игры не доступны');
     const games = await gamesResponse.json();
@@ -85,7 +101,7 @@ export const initializeAppData = async (
     return {
       userData: {
         id: telegramData.userId,
-        username: telegramData.username,
+        username: telegramData.username || 'Гость',
         photoUrl: telegramData.photoUrl || '',
         referrals: [],
         firstLogin: new Date().toISOString(),
@@ -114,9 +130,7 @@ export const updateOnlineCoins = async (userId: string, currentCoins: number): P
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         userId,
-        coins: currentCoins + 1,
-        stars: 0,
-        telegramStars: 0,
+        coins: currentCoins + 1, // Обновляем только coins
       }),
     });
     if (!response.ok) throw new Error('Ошибка обновления монет');
