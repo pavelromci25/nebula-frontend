@@ -1,5 +1,6 @@
 import React from 'react';
-import { FaHome, FaGamepad, FaUser, FaCalendarDay, FaApple } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
+import { FaHome, FaGamepad, FaChartBar, FaUser } from 'react-icons/fa';
 
 interface BottomMenuProps {
   activeTab: string;
@@ -7,48 +8,44 @@ interface BottomMenuProps {
 }
 
 const BottomMenu: React.FC<BottomMenuProps> = ({ activeTab, setActiveTab }) => {
+  const navigate = useNavigate();
+
+  const handleTabClick = (tab: string, path: string) => {
+    setActiveTab(tab);
+    navigate(path);
+  };
+
   return (
-    <nav className="bottom-menu">
-      <button
-        className={`menu-item ${activeTab === 'today' ? 'active' : ''}`}
-        onClick={() => setActiveTab('today')}
-      >
-        <FaCalendarDay className="menu-icon" />
-        <span>Сегодня</span>
-      </button>
-      
-      <button
-        className={`menu-item ${activeTab === 'games' ? 'active' : ''}`}
-        onClick={() => setActiveTab('games')}
-      >
-        <FaGamepad className="menu-icon" />
-        <span>Игры</span>
-      </button>
-      
+    <div className="bottom-menu">
       <button
         className={`menu-item ${activeTab === 'home' ? 'active' : ''}`}
-        onClick={() => setActiveTab('home')}
+        onClick={() => handleTabClick('home', '/')}
       >
         <FaHome className="menu-icon" />
-        <span>Главная</span>
+        Главная
       </button>
-      
+      <button
+        className={`menu-item ${activeTab === 'apps' ? 'active' : ''}`}
+        onClick={() => handleTabClick('apps', '/apps')}
+      >
+        <FaGamepad className="menu-icon" />
+        Apps
+      </button>
       <button
         className={`menu-item ${activeTab === 'stats' ? 'active' : ''}`}
-        onClick={() => setActiveTab('stats')}
+        onClick={() => handleTabClick('stats', '/stats')}
       >
-        <FaApple className="menu-icon" />
-        <span>Статистика</span>
+        <FaChartBar className="menu-icon" />
+        Статистика
       </button>
-      
       <button
         className={`menu-item ${activeTab === 'profile' ? 'active' : ''}`}
-        onClick={() => setActiveTab('profile')}
+        onClick={() => handleTabClick('profile', '/profile')}
       >
         <FaUser className="menu-icon" />
-        <span>Профиль</span>
+        Профиль
       </button>
-    </nav>
+    </div>
   );
 };
 

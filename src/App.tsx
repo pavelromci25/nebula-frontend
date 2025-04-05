@@ -4,9 +4,11 @@ import { initializeAppData, updateOnlineCoins } from './components/data';
 import UserHeader from './components/UserHeader';
 import BottomMenu from './components/BottomMenu';
 import HomePage from './components/HomePage';
-import GamesPage from './components/GamesPage';
+import AppsPage from './components/AppsPage';
+import AppDetailPage from './components/AppDetailPage';
 import ProfilePage from './components/ProfilePage';
 import StatsPage from './components/StatsPage';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 
 export interface Game {
@@ -101,23 +103,24 @@ function App() {
   }
 
   return (
-    <div className="app-container">
-      <UserHeader
-        username={userData.username}
-        coins={inventoryData.coins}
-        stars={inventoryData.stars}
-        photoUrl={userData.photoUrl}
-      />
-      {activeTab === 'home' && (
-        <HomePage isFullscreen={isFullscreen} isPremium={isPremium} platform={platform} />
-      )}
-      {activeTab === 'games' && <GamesPage games={games} />}
-      {activeTab === 'profile' && (
-        <ProfilePage username={userData.username} coins={inventoryData.coins} stars={inventoryData.stars} />
-      )}
-      {activeTab === 'stats' && <StatsPage />}
-      <BottomMenu activeTab={activeTab} setActiveTab={setActiveTab} />
-    </div>
+    <Router>
+      <div className="app-container">
+        <UserHeader
+          username={userData.username}
+          coins={inventoryData.coins}
+          stars={inventoryData.stars}
+          photoUrl={userData.photoUrl}
+        />
+        <Routes>
+          <Route path="/" element={<HomePage isFullscreen={isFullscreen} isPremium={isPremium} platform={platform} />} />
+          <Route path="/apps" element={<AppsPage />} />
+          <Route path="/app/:id" element={<AppDetailPage />} />
+          <Route path="/profile" element={<ProfilePage username={userData.username} coins={inventoryData.coins} stars={inventoryData.stars} />} />
+          <Route path="/stats" element={<StatsPage />} />
+        </Routes>
+        <BottomMenu activeTab={activeTab} setActiveTab={setActiveTab} />
+      </div>
+    </Router>
   );
 }
 
