@@ -14,21 +14,21 @@ interface App {
   icon: string;
   banner?: string;
   shortDescription: string;
-  longDescription: string;
-  categories: string[];
+  longDescription?: string;
+  categories?: string[];
   geo?: string;
-  developer: string;
-  rating: number;
-  catalogRating: number;
-  telegramStars: number;
-  opens: number;
-  platforms: string[];
-  ageRating: string;
-  inAppPurchases: boolean;
+  developer?: string;
+  rating?: number;
+  catalogRating?: number;
+  telegramStars?: number;
+  opens?: number;
+  platforms?: string[];
+  ageRating?: string;
+  inAppPurchases?: boolean;
   dateAdded: string;
-  gallery: string[];
+  gallery?: string[];
   video?: string;
-  complaints: number;
+  complaints?: number;
 }
 
 const AppDetailPage: React.FC = () => {
@@ -36,8 +36,8 @@ const AppDetailPage: React.FC = () => {
   const [app, setApp] = useState<App | null>(null);
   const [apps, setApps] = useState<App[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [hasLaunched, setHasLaunched] = useState(false); // Проверка запуска
-  const [userRating, setUserRating] = useState<number>(0); // Оценка пользователя
+  const [hasLaunched, setHasLaunched] = useState(false);
+  const [userRating, setUserRating] = useState<number>(0);
 
   useEffect(() => {
     const fetchApps = async () => {
@@ -50,8 +50,7 @@ const AppDetailPage: React.FC = () => {
         setIsLoading(false);
 
         // Проверка, запускал ли пользователь приложение (заглушка)
-        // В будущем это будет через API
-        setHasLaunched(true); // Для теста
+        setHasLaunched(true);
       } catch (error) {
         console.error('Ошибка при загрузке приложения:', error);
         setIsLoading(false);
@@ -60,7 +59,6 @@ const AppDetailPage: React.FC = () => {
     fetchApps();
   }, [id]);
 
-  // Отправка рейтинга
   const handleRating = async (rating: number) => {
     if (!hasLaunched) {
       alert('Вы должны запустить приложение, чтобы оставить рейтинг.');
@@ -79,7 +77,6 @@ const AppDetailPage: React.FC = () => {
     }
   };
 
-  // Отправка жалобы
   const handleComplaint = async () => {
     if (!hasLaunched) {
       alert('Вы должны запустить приложение, чтобы оставить жалобу.');
@@ -112,14 +109,13 @@ const AppDetailPage: React.FC = () => {
     );
   }
 
-  // Похожие приложения (из той же категории)
+  // Используем опциональную цепочку для проверки app.categories
   const similarApps = apps
-    .filter(a => a.id !== app.id && a.categories.some(cat => app.categories.includes(cat)))
+    .filter(a => a.id !== app.id && a.categories?.length && app.categories?.length && a.categories.some(cat => app.categories!.includes(cat)))
     .slice(0, 3);
 
   return (
     <div className="content slide-in">
-      {/* Основная информация */}
       <section className="section">
         <div className="flex items-center gap-4 mb-4">
           <img src={app.icon} alt={app.name} className="w-20 h-20 rounded-lg" />
@@ -134,75 +130,75 @@ const AppDetailPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Статус Бар */}
       <section className="section">
         <div className="card">
           <div className="flex justify-between">
             <div>
               <p className="font-medium">Рейтинг каталога</p>
-              <p className="text-[var(--tg-theme-link-color)]">{app.catalogRating}/5</p>
+              <p className="text-[var(--tg-theme-link-color)]">{app.catalogRating || 'Н/Д'}/5</p>
             </div>
             <div>
               <p className="font-medium">Позиция</p>
-              <p className="text-[var(--tg-theme-link-color)]">#{apps.sort((a, b) => b.catalogRating - a.catalogRating).findIndex(a => a.id === app.id) + 1}</p>
+              <p className="text-[var(--tg-theme-link-color)]">#{apps.sort((a, b) => (b.catalogRating || 0) - (a.catalogRating || 0)).findIndex(a => a.id === app.id) + 1}</p>
             </div>
             <div>
               <p className="font-medium">Telegram Stars</p>
-              <p className="text-[var(--tg-theme-link-color)]">{app.telegramStars}</p>
+              <p className="text-[var(--tg-theme-link-color)]">{app.telegramStars || 0}</p>
             </div>
             <div>
               <p className="font-medium">Открытия</p>
-              <p className="text-[var(--tg-theme-link-color)]">{app.opens}</p>
+              <p className="text-[var(--tg-theme-link-color)]">{app.opens || 0}</p>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Галерея */}
       <section className="section">
         <h2 className="section-title">Галерея</h2>
-        <Swiper
-          modules={[Navigation, Pagination]}
-          spaceBetween={16}
-          slidesPerView={1}
-          navigation
-          pagination={{ clickable: true }}
-          className="featured-carousel"
-        >
-          {app.gallery.map((img, index) => (
-            <SwiperSlide key={index}>
-              <img src={img} alt={`${app.name} screenshot ${index + 1}`} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
-            </SwiperSlide>
-          ))}
-          {app.video && (
-            <SwiperSlide>
-              <iframe
-                src={app.video}
-                title={`${app.name} video`}
-                width="100%"
-                height="200px"
-                frameBorder="0"
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </SwiperSlide>
-          )}
-        </Swiper>
+        {app.gallery && app.gallery.length > 0 ? (
+          <Swiper
+            modules={[Navigation, Pagination]}
+            spaceBetween={16}
+            slidesPerView={1}
+            navigation
+            pagination={{ clickable: true }}
+            className="featured-carousel"
+          >
+            {app.gallery.map((img, index) => (
+              <SwiperSlide key={index}>
+                <img src={img} alt={`${app.name} screenshot ${index + 1}`} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
+              </SwiperSlide>
+            ))}
+            {app.video && (
+              <SwiperSlide>
+                <iframe
+                  src={app.video}
+                  title={`${app.name} video`}
+                  width="100%"
+                  height="200px"
+                  frameBorder="0"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </SwiperSlide>
+            )}
+          </Swiper>
+        ) : (
+          <p className="card-text">Галерея недоступна</p>
+        )}
       </section>
 
-      {/* Описание */}
       <section className="section">
         <h2 className="section-title">Описание</h2>
         <div className="card">
-          <p className="card-text">{app.longDescription}</p>
+          <p className="card-text">{app.longDescription || 'Описание отсутствует'}</p>
         </div>
       </section>
 
-      {/* Рейтинг от пользователей */}
       <section className="section">
         <h2 className="section-title">Рейтинг</h2>
         <div className="card">
-          <p className="font-medium mb-2">Средний рейтинг: {app.rating}/5</p>
+          <p className="font-medium mb-2">Средний рейтинг: {app.rating || 0}/5</p>
           <div className="flex gap-1 mb-2">
             {[1, 2, 3, 4, 5].map(star => (
               <FaStar
@@ -216,28 +212,30 @@ const AppDetailPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Данные о приложении */}
       <section className="section">
         <h2 className="section-title">О приложении</h2>
         <div className="card">
-          <p className="card-text"><strong>Разработчик:</strong> {app.developer}</p>
+          <p className="card-text"><strong>Разработчик:</strong> {app.developer || 'Не указан'}</p>
           <p className="card-text">
             <strong>Категории:</strong>{' '}
-            {app.categories.map((cat, index) => (
-              <span key={cat}>
-                <Link to={`/apps?category=${cat}`} className="text-[var(--tg-theme-link-color)]">{cat}</Link>
-                {index < app.categories.length - 1 ? ', ' : ''}
-              </span>
-            ))}
+            {app.categories && app.categories.length > 0 ? (
+              app.categories.map((cat, index) => (
+                <span key={cat}>
+                  <Link to={`/apps?category=${cat}`} className="text-[var(--tg-theme-link-color)]">{cat}</Link>
+                  {index < (app.categories?.length ?? 0) - 1 ? ', ' : ''}
+                </span>
+              ))
+            ) : (
+              'Без категории'
+            )}
           </p>
-          <p className="card-text"><strong>Игровые покупки:</strong> {app.inAppPurchases ? 'Да' : 'Нет'}</p>
-          <p className="card-text"><strong>Возрастной рейтинг:</strong> {app.ageRating}</p>
-          <p className="card-text"><strong>Платформы:</strong> {app.platforms.join(', ')}</p>
+          <p className="card-text"><strong>Игровые покупки:</strong> {app.inAppPurchases !== undefined ? (app.inAppPurchases ? 'Да' : 'Нет') : 'Не указано'}</p>
+          <p className="card-text"><strong>Возрастной рейтинг:</strong> {app.ageRating || 'Не указано'}</p>
+          <p className="card-text"><strong>Платформы:</strong> {app.platforms && app.platforms.length > 0 ? app.platforms.join(', ') : 'Не указано'}</p>
           <p className="card-text"><strong>Дата добавления:</strong> {app.dateAdded}</p>
         </div>
       </section>
 
-      {/* Рекламный блок */}
       <section className="section">
         <h2 className="section-title">Реклама</h2>
         <div className="card">
@@ -247,7 +245,6 @@ const AppDetailPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Похожие приложения */}
       <section className="section">
         <h2 className="section-title">Похожие приложения</h2>
         <div className="games-grid">
