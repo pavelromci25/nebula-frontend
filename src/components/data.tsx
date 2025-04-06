@@ -34,7 +34,7 @@ interface App {
   name: string;
   icon: string;
   shortDescription: string;
-  categories: string[];
+  categories?: string[]; // Сделали опциональным
   url?: string;
 }
 
@@ -130,8 +130,8 @@ export const initializeAppData = async ({
       .map((app: App) => ({
         id: app.id,
         name: app.name,
-        type: app.categories[0] || 'unknown', // Используем первую категорию
-        url: app.url || '#', // Если URL нет, ставим заглушку
+        type: app.categories && app.categories.length > 0 ? app.categories[0] : 'unknown', // Добавляем проверку
+        url: app.url || '#',
         imageUrl: app.icon,
         description: app.shortDescription,
       }));
