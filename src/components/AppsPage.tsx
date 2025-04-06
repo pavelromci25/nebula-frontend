@@ -13,19 +13,18 @@ interface App {
   icon: string;
   banner?: string;
   shortDescription: string;
-  longDescription: string;
-  categories: string[];
+  categories?: string[];
   geo?: string;
-  developer: string;
-  rating: number;
-  catalogRating: number;
-  telegramStars: number;
-  opens: number;
-  platforms: string[];
-  ageRating: string;
-  inAppPurchases: boolean;
+  developer?: string;
+  rating?: number;
+  catalogRating?: number;
+  telegramStars?: number;
+  opens?: number;
+  platforms?: string[];
+  ageRating?: string;
+  inAppPurchases?: boolean;
   dateAdded: string;
-  gallery: string[];
+  gallery?: string[];
   video?: string;
 }
 
@@ -37,7 +36,6 @@ const AppsPage: React.FC = () => {
   const [filteredApps, setFilteredApps] = useState<App[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Получение данных из API
   useEffect(() => {
     const fetchApps = async () => {
       try {
@@ -54,23 +52,19 @@ const AppsPage: React.FC = () => {
     fetchApps();
   }, []);
 
-  // Фильтрация
   useEffect(() => {
     let filtered = apps;
 
-    // Глобальный фильтр
     if (globalFilter === 'games') {
       filtered = filtered.filter(app => app.type === 'game');
     } else if (globalFilter === 'apps') {
       filtered = filtered.filter(app => app.type === 'app');
     }
 
-    // Фильтр по категории
     if (category !== 'Все') {
-      filtered = filtered.filter(app => app.categories.includes(category));
+      filtered = filtered.filter(app => app.categories && app.categories.includes(category));
     }
 
-    // Фильтр по гео (заглушка, пока без реальной геолокации)
     if (geoFilter !== 'Все') {
       filtered = filtered.filter(app => app.geo === geoFilter);
     }
@@ -82,29 +76,22 @@ const AppsPage: React.FC = () => {
     return <div className="content">Загрузка...</div>;
   }
 
-  // Категории
-  const categories = ['Все', ...new Set(apps.flatMap(app => app.categories))];
+  const categories = ['Все', ...new Set(apps.flatMap(app => app.categories || []))];
   const geoOptions = ['Все', 'Россия', 'США', 'Германия'];
 
-  // Популярные приложения (слайдер)
   const popularApps = apps.slice(0, 3);
-
-  // Выбор редакции
   const editorsChoice = apps.slice(0, 3);
-
-  // Новенькое (по дате добавления)
   const newApps = [...apps].sort((a, b) => new Date(b.dateAdded).getTime() - new Date(a.dateAdded).getTime()).slice(0, 3);
 
-  // Рейтинг (сортировка по формуле)
+  // Обновлённая формула рейтинга с учётом Telegram Stars
   const rankedApps = [...filteredApps].sort((a, b) => {
-    const scoreA = (a.rating * 0.2) + (a.catalogRating * 0.2) + (a.telegramStars * 0.1) + (a.opens * 0.0001);
-    const scoreB = (b.rating * 0.2) + (b.catalogRating * 0.2) + (b.telegramStars * 0.1) + (b.opens * 0.0001);
+    const scoreA = (a.rating || 0) * 0.2 + (a.catalogRating || 0) * 0.2 + (a.telegramStars || 0) * 0.3 + (a.opens || 0) * 0.0001;
+    const scoreB = (b.rating || 0) * 0.2 + (b.catalogRating || 0) * 0.2 + (b.telegramStars || 0) * 0.3 + (b.opens || 0) * 0.0001;
     return scoreB - scoreA;
   });
 
   return (
     <div className="content slide-in">
-      {/* Глобальный фильтр */}
       <section className="section">
         <div className="category-tabs">
           <button
@@ -128,7 +115,6 @@ const AppsPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Локальный фильтр по гео для приложений */}
       {globalFilter === 'apps' && (
         <section className="section">
           <div className="category-tabs">
@@ -145,7 +131,6 @@ const AppsPage: React.FC = () => {
         </section>
       )}
 
-      {/* Фильтры по категориям */}
       <section className="section">
         <div className="category-tabs">
           {categories.map(cat => (
@@ -160,7 +145,6 @@ const AppsPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Слайдер популярных приложений */}
       <section className="section">
         <h2 className="section-title">Популярное</h2>
         <Swiper
@@ -182,7 +166,7 @@ const AppsPage: React.FC = () => {
                     <img src={app.icon} alt={app.name} className="w-10 h-10 rounded-lg" />
                     <div>
                       <h3 className="featured-game-title">{app.name}</h3>
-                      <p className="featured-game-category">{app.categories.join(', ')}</p>
+                      <p className="featured-game-category">{app.categories ? app.categories.join(', ') : 'Без категории'}</p>
                     </div>
                   </div>
                   <p className="card-text">{app.shortDescription}</p>
@@ -194,7 +178,6 @@ const AppsPage: React.FC = () => {
         </Swiper>
       </section>
 
-      {/* Выбор редакции */}
       <section className="section">
         <h2 className="section-title">Выбор редакции</h2>
         <div className="games-grid">
@@ -213,7 +196,6 @@ const AppsPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Новенькое */}
       <section className="section">
         <h2 className="section-title">Новенькое</h2>
         <div className="games-grid">
@@ -232,7 +214,6 @@ const AppsPage: React.FC = () => {
         </div>
       </section>
 
-      {/* Рейтинг */}
       <section className="section">
         <h2 className="section-title">Рейтинг</h2>
         <div className="games-grid">

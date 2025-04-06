@@ -6,6 +6,7 @@ import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
 import { FaStar } from 'react-icons/fa';
+import { useTelegram } from '../hooks/useTelegram';
 
 interface App {
   id: string;
@@ -38,6 +39,7 @@ const AppDetailPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [hasLaunched, setHasLaunched] = useState(false);
   const [userRating, setUserRating] = useState<number>(0);
+  const { userId } = useTelegram();
 
   useEffect(() => {
     const fetchApps = async () => {
@@ -93,6 +95,28 @@ const AppDetailPage: React.FC = () => {
     }
   };
 
+  const handleDonate = async () => {
+    try {
+      const stars = prompt('Сколько Telegram Stars вы хотите подарить? (Максимум 10)', '1');
+      const starsNum = parseInt(stars || '0', 10);
+      if (isNaN(starsNum) || starsNum <= 0 || starsNum > 10) {
+        alert('Пожалуйста, введите число от 1 до 10.');
+        return;
+      }
+
+      const response = await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${id}/donate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId, stars: starsNum }),
+      });
+      const { invoiceLink } = await response.json();
+      window.open(invoiceLink, '_blank');
+    } catch (error) {
+      console.error('Ошибка при создании инвойса:', error);
+      alert('Ошибка при создании инвойса. Попробуйте позже.');
+    }
+  };
+
   if (isLoading) {
     return <div className="content">Загрузка...</div>;
   }
@@ -109,7 +133,6 @@ const AppDetailPage: React.FC = () => {
     );
   }
 
-  // Используем опциональную цепочку для проверки app.categories
   const similarApps = apps
     .filter(a => a.id !== app.id && a.categories?.length && app.categories?.length && a.categories.some(cat => app.categories!.includes(cat)))
     .slice(0, 3);
@@ -127,6 +150,7 @@ const AppDetailPage: React.FC = () => {
         <div className="flex gap-3">
           <button className="button">Get</button>
           <button className="button">Поделиться</button>
+          <button className="button" onClick={handleDonate}>Подарить Stars</button>
         </div>
       </section>
 
