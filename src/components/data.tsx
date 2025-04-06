@@ -20,14 +20,6 @@ interface InventoryData {
   lastCoinUpdate: string;
 }
 
-interface TelegramData {
-  userId: string;
-  username: string;
-  photoUrl: string;
-  platform: string;
-  isPremium: boolean;
-}
-
 interface AppData {
   userData: UserData;
   inventoryData: InventoryData;
@@ -35,108 +27,170 @@ interface AppData {
   error?: string;
 }
 
-export const initializeAppData = async (
-  telegramData: TelegramData
-): Promise<AppData> => {
+// Интерфейс для данных из API
+interface App {
+  id: string;
+  type: 'game' | 'app';
+  name: string;
+  icon: string;
+  shortDescription: string;
+  categories: string[];
+  url?: string;
+}
+
+export const initializeAppData = async ({
+  userId,
+  username,
+  photoUrl,
+  platform,
+  isPremium,
+}: {
+  userId: string;
+  username: string;
+  photoUrl: string;
+  platform: string;
+  isPremium: boolean;
+}): Promise<AppData> => {
+  const defaultUserData: UserData = {
+    id: userId,
+    username,
+    photoUrl,
+    referrals: [],
+    firstLogin: new Date().toISOString(),
+    lastLogin: new Date().toISOString(),
+    platforms: [platform],
+    onlineStatus: 'online',
+    loginCount: 1,
+  };
+
+  const defaultInventoryData: InventoryData = {
+    userId,
+    coins: 0,
+    stars: 0,
+    telegramStars: 0,
+    lastCoinUpdate: new Date().toISOString(),
+  };
+
   try {
-    const { userId } = telegramData;
+    // Проверяем, существует ли пользователь
+    const userResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/users/${userId}`);
+    let userData = defaultUserData;
+    let inventoryData = defaultInventoryData;
 
-    // 1. Проверка существования пользователя
-    const userResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/user/${userId}`);
-    let userData;
     if (userResponse.ok) {
-      userData = await userResponse.json();
-    } else if (userResponse.status === 404) {
-      // Создание нового пользователя
-      const newUser = {
-        userId,
-        username: telegramData.username || 'Гость',
-        photoUrl: telegramData.photoUrl || '',
-        platform: telegramData.platform || 'Неизвестно',
-        isPremium: telegramData.isPremium || false,
-      };
-      const createUserResponse = await fetch('https://nebula-server-ypun.onrender.com/api/user/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newUser),
-      });
-      if (!createUserResponse.ok) throw new Error('Ошибка создания пользователя');
-      userData = await createUserResponse.json();
-    } else {
-      throw new Error('Ошибка загрузки данных пользователя');
-    }
-
-    // 2. Проверка и загрузка инвентаря
-    const inventoryResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/inventory/${userId}`);
-    let inventoryData;
-    if (inventoryResponse.ok) {
-      inventoryData = await inventoryResponse.json();
-    } else if (inventoryResponse.status === 404) {
-      // Создание нового инвентаря
-      const newInventory = {
-        userId,
-        coins: 0,
-        stars: 0,
-        telegramStars: 0,
-      };
-      const createInventoryResponse = await fetch('https://nebula-server-ypun.onrender.com/api/inventory/update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newInventory),
-      });
-      if (!createInventoryResponse.ok) throw new Error('Ошибка создания инвентаря');
-      inventoryData = await createInventoryResponse.json();
-    } else {
-      throw new Error('Ошибка загрузки инвентаря');
-    }
-
-    // 3. Получение списка игр
-    const gamesResponse = await fetch('https://nebula-server-ypun.onrender.com/api/games');
-    if (!gamesResponse.ok) throw new Error('Игры не доступны');
-    const games = await gamesResponse.json();
-
-    return { userData, inventoryData, games };
-  } catch (e) {
-    console.error('Ошибка инициализации данных:', e);
-    return {
-      userData: {
-        id: telegramData.userId,
-        username: telegramData.username || 'Гость',
-        photoUrl: telegramData.photoUrl || '',
-        referrals: [],
-        firstLogin: new Date().toISOString(),
+      const existingUser = await userResponse.json();
+      userData = {
+        ...existingUser,
         lastLogin: new Date().toISOString(),
-        platforms: [telegramData.platform],
-        onlineStatus: 'offline',
-        loginCount: 0,
-      },
-      inventoryData: {
-        userId: telegramData.userId,
-        coins: 0,
-        stars: 0,
-        telegramStars: 0,
-        lastCoinUpdate: new Date().toISOString(),
-      },
+        loginCount: existingUser.loginCount + 1,
+        platforms: existingUser.platforms.includes(platform)
+          ? existingUser.platforms
+          : [...existingUser.platforms, platform],
+        onlineStatus: 'online',
+      };
+
+      const inventoryResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/inventory/${userId}`);
+      if (inventoryResponse.ok) {
+        inventoryData = await inventoryResponse.json();
+      }
+    } else {
+      // Создаём нового пользователя
+      const createUserResponse = await fetch('https://nebula-server-ypun.onrender.com/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+
+      if (!createUserResponse.ok) {
+        throw new Error('Ошибка создания пользователя');
+      }
+
+      // Создаём инвентарь
+      const createInventoryResponse = await fetch('https://nebula-server-ypun.onrender.com/api/inventory', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(inventoryData),
+      });
+
+      if (!createInventoryResponse.ok) {
+        throw new Error('Ошибка создания инвентаря');
+      }
+    }
+
+    // Получаем данные приложений из API
+    const appsResponse = await fetch('https://nebula-server-ypun.onrender.com/api/apps');
+    if (!appsResponse.ok) {
+      throw new Error('Ошибка загрузки приложений');
+    }
+    const appsData = await appsResponse.json();
+
+    // Фильтруем только игры для совместимости с текущей логикой
+    const games: Game[] = appsData
+      .filter((app: App) => app.type === 'game')
+      .map((app: App) => ({
+        id: app.id,
+        name: app.name,
+        type: app.categories[0] || 'unknown', // Используем первую категорию
+        url: app.url || '#', // Если URL нет, ставим заглушку
+        imageUrl: app.icon,
+        description: app.shortDescription,
+      }));
+
+    return {
+      userData,
+      inventoryData,
+      games,
+    };
+  } catch (error: any) {
+    console.error('Ошибка инициализации данных:', error);
+    return {
+      userData: defaultUserData,
+      inventoryData: defaultInventoryData,
       games: [],
-      error: e instanceof Error ? e.message : 'Неизвестная ошибка',
+      error: error.message || 'Неизвестная ошибка',
     };
   }
 };
 
 export const updateOnlineCoins = async (userId: string, currentCoins: number): Promise<InventoryData> => {
   try {
-    const response = await fetch('https://nebula-server-ypun.onrender.com/api/inventory/update', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        userId,
-        coins: currentCoins + 1, // Обновляем только coins
-      }),
-    });
-    if (!response.ok) throw new Error('Ошибка обновления монет');
-    return response.json();
-  } catch (e) {
-    console.error('Ошибка обновления монет:', e);
-    return { userId, coins: currentCoins, stars: 0, telegramStars: 0, lastCoinUpdate: new Date().toISOString() };
+    const response = await fetch(`https://nebula-server-ypun.onrender.com/api/inventory/${userId}`);
+    if (!response.ok) {
+      throw new Error('Ошибка получения инвентаря');
+    }
+    const inventoryData = await response.json();
+
+    const now = new Date();
+    const lastUpdate = new Date(inventoryData.lastCoinUpdate);
+    const timeDiff = (now.getTime() - lastUpdate.getTime()) / 1000; // Разница в секундах
+
+    if (timeDiff >= 10) {
+      const newCoins = currentCoins + 1;
+      const updateResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/inventory/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          coins: newCoins,
+          lastCoinUpdate: now.toISOString(),
+        }),
+      });
+
+      if (!updateResponse.ok) {
+        throw new Error('Ошибка обновления монет');
+      }
+
+      return await updateResponse.json();
+    }
+
+    return inventoryData;
+  } catch (error) {
+    console.error('Ошибка обновления монет:', error);
+    return {
+      userId,
+      coins: currentCoins,
+      stars: 0,
+      telegramStars: 0,
+      lastCoinUpdate: new Date().toISOString(),
+    };
   }
 };
