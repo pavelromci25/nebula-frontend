@@ -1,15 +1,104 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import { Navigation, Pagination } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/navigation';
 import 'swiper/css/pagination';
-import { mockApps, App } from '../data/mockApps';
+import { FaStar } from 'react-icons/fa';
+
+interface App {
+  id: string;
+  type: 'game' | 'app';
+  name: string;
+  icon: string;
+  banner?: string;
+  shortDescription: string;
+  longDescription: string;
+  categories: string[];
+  geo?: string;
+  developer: string;
+  rating: number;
+  catalogRating: number;
+  telegramStars: number;
+  opens: number;
+  platforms: string[];
+  ageRating: string;
+  inAppPurchases: boolean;
+  dateAdded: string;
+  gallery: string[];
+  video?: string;
+  complaints: number;
+}
 
 const AppDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const app = mockApps.find(app => app.id === id);
+  const [app, setApp] = useState<App | null>(null);
+  const [apps, setApps] = useState<App[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasLaunched, setHasLaunched] = useState(false); // Проверка запуска
+  const [userRating, setUserRating] = useState<number>(0); // Оценка пользователя
+
+  useEffect(() => {
+    const fetchApps = async () => {
+      try {
+        const response = await fetch('https://nebula-server-ypun.onrender.com/api/apps');
+        const data = await response.json();
+        setApps(data);
+        const foundApp = data.find((a: App) => a.id === id);
+        setApp(foundApp || null);
+        setIsLoading(false);
+
+        // Проверка, запускал ли пользователь приложение (заглушка)
+        // В будущем это будет через API
+        setHasLaunched(true); // Для теста
+      } catch (error) {
+        console.error('Ошибка при загрузке приложения:', error);
+        setIsLoading(false);
+      }
+    };
+    fetchApps();
+  }, [id]);
+
+  // Отправка рейтинга
+  const handleRating = async (rating: number) => {
+    if (!hasLaunched) {
+      alert('Вы должны запустить приложение, чтобы оставить рейтинг.');
+      return;
+    }
+    try {
+      await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${id}/rate`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ rating }),
+      });
+      setUserRating(rating);
+      alert('Спасибо за ваш рейтинг!');
+    } catch (error) {
+      console.error('Ошибка при отправке рейтинга:', error);
+    }
+  };
+
+  // Отправка жалобы
+  const handleComplaint = async () => {
+    if (!hasLaunched) {
+      alert('Вы должны запустить приложение, чтобы оставить жалобу.');
+      return;
+    }
+    try {
+      await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${id}/complain`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      alert('Жалоба отправлена. Спасибо за ваш отзыв!');
+    } catch (error) {
+      console.error('Ошибка при отправке жалобы:', error);
+    }
+  };
+
+  if (isLoading) {
+    return <div className="content">Загрузка...</div>;
+  }
 
   if (!app) {
     return (
@@ -24,7 +113,7 @@ const AppDetailPage: React.FC = () => {
   }
 
   // Похожие приложения (из той же категории)
-  const similarApps = mockApps
+  const similarApps = apps
     .filter(a => a.id !== app.id && a.categories.some(cat => app.categories.includes(cat)))
     .slice(0, 3);
 
@@ -55,7 +144,7 @@ const AppDetailPage: React.FC = () => {
             </div>
             <div>
               <p className="font-medium">Позиция</p>
-              <p className="text-[var(--tg-theme-link-color)]">#{mockApps.sort((a, b) => b.catalogRating - a.catalogRating).findIndex(a => a.id === app.id) + 1}</p>
+              <p className="text-[var(--tg-theme-link-color)]">#{apps.sort((a, b) => b.catalogRating - a.catalogRating).findIndex(a => a.id === app.id) + 1}</p>
             </div>
             <div>
               <p className="font-medium">Telegram Stars</p>
@@ -113,7 +202,17 @@ const AppDetailPage: React.FC = () => {
       <section className="section">
         <h2 className="section-title">Рейтинг</h2>
         <div className="card">
-          <p className="font-medium">Средний рейтинг: {app.rating}/5</p>
+          <p className="font-medium mb-2">Средний рейтинг: {app.rating}/5</p>
+          <div className="flex gap-1 mb-2">
+            {[1, 2, 3, 4, 5].map(star => (
+              <FaStar
+                key={star}
+                className={`cursor-pointer ${userRating >= star ? 'text-yellow-400' : 'text-gray-300'}`}
+                onClick={() => handleRating(star)}
+              />
+            ))}
+          </div>
+          <button className="button" onClick={handleComplaint}>Приложение не работает</button>
         </div>
       </section>
 
@@ -122,7 +221,15 @@ const AppDetailPage: React.FC = () => {
         <h2 className="section-title">О приложении</h2>
         <div className="card">
           <p className="card-text"><strong>Разработчик:</strong> {app.developer}</p>
-          <p className="card-text"><strong>Категории:</strong> {app.categories.join(', ')}</p>
+          <p className="card-text">
+            <strong>Категории:</strong>{' '}
+            {app.categories.map((cat, index) => (
+              <span key={cat}>
+                <Link to={`/apps?category=${cat}`} className="text-[var(--tg-theme-link-color)]">{cat}</Link>
+                {index < app.categories.length - 1 ? ', ' : ''}
+              </span>
+            ))}
+          </p>
           <p className="card-text"><strong>Игровые покупки:</strong> {app.inAppPurchases ? 'Да' : 'Нет'}</p>
           <p className="card-text"><strong>Возрастной рейтинг:</strong> {app.ageRating}</p>
           <p className="card-text"><strong>Платформы:</strong> {app.platforms.join(', ')}</p>
