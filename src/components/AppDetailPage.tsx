@@ -21,8 +21,7 @@ interface App {
   developer?: string;
   rating?: number;
   catalogRating?: number;
-  telegramStars?: number;
-  stars?: number; // Добавляем stars
+  telegramStarsDonations?: number; // Используем telegramStarsDonations
   opens?: number;
   platforms?: string[];
   ageRating?: string;
@@ -59,7 +58,9 @@ const AppDetailPage: React.FC = () => {
         setIsLoading(false);
       }
     };
-    fetchApps();
+    if (!app) {
+      fetchApps();
+    }
   }, [id]);
 
   const handleRating = async (rating: number) => {
@@ -68,12 +69,17 @@ const AppDetailPage: React.FC = () => {
       return;
     }
     try {
-      await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${id}/rate`, {
+      const response = await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${id}/rate`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rating }),
       });
+      if (!response.ok) {
+        throw new Error('Ошибка при отправке рейтинга');
+      }
+      const updatedApp = await response.json();
       setUserRating(rating);
+      setApp(updatedApp);
       alert('Спасибо за ваш рейтинг!');
     } catch (error) {
       console.error('Ошибка при отправке рейтинга:', error);
@@ -86,10 +92,15 @@ const AppDetailPage: React.FC = () => {
       return;
     }
     try {
-      await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${id}/complain`, {
+      const response = await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${id}/complain`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
+      if (!response.ok) {
+        throw new Error('Ошибка при отправке жалобы');
+      }
+      const updatedApp = await response.json();
+      setApp(updatedApp);
       alert('Жалоба отправлена. Спасибо за ваш отзыв!');
     } catch (error) {
       console.error('Ошибка при отправке жалобы:', error);
@@ -115,9 +126,9 @@ const AppDetailPage: React.FC = () => {
       }
       const result = await response.json();
       alert(result.message);
-      // Обновляем stars локально
+      // Обновляем telegramStarsDonations локально
       if (app) {
-        setApp({ ...app, stars: (app.stars || 0) + starsNum });
+        setApp({ ...app, telegramStarsDonations: result.updatedStars });
       }
     } catch (error) {
       console.error('Ошибка при отправке доната:', error);
@@ -175,7 +186,7 @@ const AppDetailPage: React.FC = () => {
             </div>
             <div>
               <p className="font-medium">Stars</p>
-              <p className="text-[var(--tg-theme-link-color)]">{app.stars || 0}</p>
+              <p className="text-[var(--tg-theme-link-color)]">{app.telegramStarsDonations || 0}</p> {/* Используем telegramStarsDonations */}
             </div>
             <div>
               <p className="font-medium">Открытия</p>
