@@ -103,6 +103,9 @@ export function useTelegram() {
         }
 
         setPlatform(webApp.platform || 'Неизвестно');
+
+        // Проверяем поддержку BackButton
+        console.log('BackButton initial state, isVisible:', backButton.isVisible);
       } else {
         console.error('Telegram Web App not initialized');
       }
