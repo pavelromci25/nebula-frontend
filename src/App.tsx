@@ -36,36 +36,9 @@ function AppContent({ games, userData, inventoryData, error, isLoading, activeTa
   activeTab: string;
   setActiveTab: (tab: string) => void;
 }) {
-  const { isFullscreen, isPremium, platform, setBackButton } = useTelegram();
+  const { isFullscreen, isPremium, platform } = useTelegram();
   const location = useLocation();
   const navigate = useNavigate();
-
-  useEffect(() => {
-    console.log('Current location:', location.pathname);
-    // Показываем кнопку "Назад" на страницах, кроме главной
-    if (location.pathname !== '/') {
-      console.log('Showing BackButton for path:', location.pathname);
-      setBackButton(true, () => {
-        console.log('BackButton clicked, navigating back');
-        navigate(-1);
-      });
-    } else {
-      console.log('Hiding BackButton for path:', location.pathname);
-      setBackButton(false);
-    }
-
-    // Уведомляем Telegram о смене страницы
-    if (window.Telegram && window.Telegram.WebApp) {
-      window.Telegram.WebApp.expand();
-      console.log('Notified Telegram of page change:', location.pathname);
-    }
-
-    // Очищаем обработчик при размонтировании
-    return () => {
-      console.log('Cleaning up BackButton handler');
-      setBackButton(false);
-    };
-  }, [location.pathname, navigate, setBackButton]);
 
   if (isLoading) {
     return (

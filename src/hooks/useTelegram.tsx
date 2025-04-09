@@ -128,56 +128,6 @@ export function useTelegram() {
     });
   }, []);
 
-  // Инициализируем SDK и монтируем backButton
-  useEffect(() => {
-    const initializeSdk = async () => {
-      try {
-        await init();
-        console.log('Telegram SDK initialized successfully');
-        setIsSdkInitialized(true);
-
-        // Монтируем backButton после инициализации SDK
-        backButton.mount();
-        console.log('BackButton mounted, isVisible:', backButton.isVisible);
-      } catch (error) {
-        console.error('Failed to initialize Telegram SDK:', error);
-      }
-    };
-
-    initializeSdk();
-
-    // Размонтируем backButton при размонтировании хука
-    return () => {
-      if (isSdkInitialized) {
-        backButton.unmount();
-        console.log('BackButton unmounted');
-      }
-    };
-  }, []);
-
-  // Функция для управления кнопкой "Назад"
-  const setBackButton = (visible: boolean, onClick?: () => void) => {
-    if (!isSdkInitialized || !isWebAppInitialized) {
-      console.warn('Telegram SDK or Web App not initialized yet, cannot set BackButton');
-      return;
-    }
-
-    console.log('setBackButton called:', { visible, hasOnClick: !!onClick });
-    if (visible) {
-      backButton.show();
-      console.log('BackButton shown, isVisible:', backButton.isVisible);
-      if (onClick) {
-        backButton.onClick(onClick);
-      }
-    } else {
-      backButton.hide();
-      console.log('BackButton hidden, isVisible:', backButton.isVisible);
-      if (onClick) {
-        backButton.offClick(onClick);
-      }
-    }
-  };
-
   useEffect(() => {
     if (window.Telegram && window.Telegram.WebApp) {
       const webApp = window.Telegram.WebApp;
@@ -202,6 +152,5 @@ export function useTelegram() {
     isPremium,
     platform,
     userId,
-    setBackButton,
   };
 }
