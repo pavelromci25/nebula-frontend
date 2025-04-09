@@ -1,7 +1,7 @@
 import { Game, Referral } from '../App';
 
 interface UserData {
-  id: string;
+  userId: string; // Используем userId вместо id
   username: string;
   photoUrl: string;
   referrals: Referral[];
@@ -27,14 +27,13 @@ interface AppData {
   error?: string;
 }
 
-// Интерфейс для данных из API
 interface App {
   id: string;
   type: 'game' | 'app';
   name: string;
   icon: string;
   shortDescription: string;
-  categories?: string[]; // Сделали опциональным
+  categories?: string[];
   url?: string;
 }
 
@@ -52,7 +51,7 @@ export const initializeAppData = async ({
   isPremium: boolean;
 }): Promise<AppData> => {
   const defaultUserData: UserData = {
-    id: userId,
+    userId, // Используем userId вместо id
     username,
     photoUrl,
     referrals: [],
@@ -73,12 +72,14 @@ export const initializeAppData = async ({
 
   try {
     // Проверяем, существует ли пользователь
+    console.log('Fetching user with userId:', userId);
     const userResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/users/${userId}`);
     let userData = defaultUserData;
     let inventoryData = defaultInventoryData;
 
     if (userResponse.ok) {
       const existingUser = await userResponse.json();
+      console.log('Found existing user:', existingUser);
       userData = {
         ...existingUser,
         lastLogin: new Date().toISOString(),
@@ -89,12 +90,15 @@ export const initializeAppData = async ({
         onlineStatus: 'online',
       };
 
+      console.log('Fetching inventory for userId:', userId);
       const inventoryResponse = await fetch(`https://nebula-server-ypun.onrender.com/api/inventory/${userId}`);
       if (inventoryResponse.ok) {
         inventoryData = await inventoryResponse.json();
+        console.log('Found inventory:', inventoryData);
       }
     } else {
       // Создаём нового пользователя
+      console.log('Creating new user with userId:', userId);
       const createUserResponse = await fetch('https://nebula-server-ypun.onrender.com/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -106,6 +110,7 @@ export const initializeAppData = async ({
       }
 
       // Создаём инвентарь
+      console.log('Creating inventory for userId:', userId);
       const createInventoryResponse = await fetch('https://nebula-server-ypun.onrender.com/api/inventory', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -118,11 +123,13 @@ export const initializeAppData = async ({
     }
 
     // Получаем данные приложений из API
+    console.log('Fetching apps');
     const appsResponse = await fetch('https://nebula-server-ypun.onrender.com/api/apps');
     if (!appsResponse.ok) {
       throw new Error('Ошибка загрузки приложений');
     }
     const appsData = await appsResponse.json();
+    console.log('Received apps:', appsData);
 
     // Фильтруем только игры для совместимости с текущей логикой
     const games: Game[] = appsData
@@ -130,7 +137,7 @@ export const initializeAppData = async ({
       .map((app: App) => ({
         id: app.id,
         name: app.name,
-        type: app.categories && app.categories.length > 0 ? app.categories[0] : 'unknown', // Добавляем проверку
+        type: app.categories && app.categories.length > 0 ? app.categories[0] : 'unknown',
         url: app.url || '#',
         imageUrl: app.icon,
         description: app.shortDescription,
@@ -154,6 +161,7 @@ export const initializeAppData = async ({
 
 export const updateOnlineCoins = async (userId: string, currentCoins: number): Promise<InventoryData> => {
   try {
+    console.log('Updating online coins for userId:', userId);
     const response = await fetch(`https://nebula-server-ypun.onrender.com/api/inventory/${userId}`);
     if (!response.ok) {
       throw new Error('Ошибка получения инвентаря');
