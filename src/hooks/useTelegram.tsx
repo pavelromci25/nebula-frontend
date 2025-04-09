@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { backButton } from '@telegram-apps/sdk';
 
 interface TelegramUser {
   first_name?: string;
@@ -65,6 +66,21 @@ export function useTelegram() {
   const [platform, setPlatform] = useState<string>('Неизвестно');
   const [userId, setUserId] = useState<string>('guest');
 
+  // Функция для управления кнопкой "Назад"
+  const setBackButton = (visible: boolean, onClick?: () => void) => {
+    if (visible) {
+      backButton.show();
+      if (onClick) {
+        backButton.onClick(onClick); // Используем onClick вместо on('click')
+      }
+    } else {
+      backButton.hide();
+      if (onClick) {
+        backButton.offClick(onClick); // Используем offClick вместо off('click')
+      }
+    }
+  };
+
   useEffect(() => {
     const loadUserData = () => {
       if (window.Telegram && window.Telegram.WebApp) {
@@ -120,5 +136,6 @@ export function useTelegram() {
     isPremium,
     platform,
     userId,
+    setBackButton,
   };
 }

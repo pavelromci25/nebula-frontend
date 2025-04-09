@@ -7,7 +7,7 @@ import HomePage from './components/HomePage';
 import AppsPage from './components/AppsPage';
 import AppDetailPage from './components/AppDetailPage';
 import ProfilePage from './components/ProfilePage';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
 
 export interface Game {
@@ -17,9 +17,9 @@ export interface Game {
   url: string;
   imageUrl?: string;
   description?: string;
-  clicks?: number; // Добавляем clicks
-  isPromotedInCatalog?: boolean; // Добавляем isPromotedInCatalog
-  dateAdded?: string; // Добавляем dateAdded
+  clicks?: number;
+  isPromotedInCatalog?: boolean;
+  dateAdded?: string;
 }
 
 export interface Referral {
@@ -51,7 +51,7 @@ function App() {
   });
   const [error, setError] = useState<string | null>(null);
 
-  const { isFullscreen, username, photoUrl, isPremium, platform, userId } = useTelegram();
+  const { isFullscreen, username, photoUrl, isPremium, platform, userId, setBackButton } = useTelegram();
 
   useEffect(() => {
     setUserData((prev) => ({
@@ -87,6 +87,26 @@ function App() {
     return () => clearInterval(interval);
   }, [userId, inventoryData.coins, error]);
 
+  // Управление кнопкой "Назад"
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Показываем кнопку "Назад" на страницах, кроме главной
+    if (location.pathname !== '/') {
+      setBackButton(true, () => {
+        navigate(-1); // Возвращаемся на предыдущую страницу
+      });
+    } else {
+      setBackButton(false);
+    }
+
+    // Очищаем обработчик при размонтировании
+    return () => {
+      setBackButton(false);
+    };
+  }, [location.pathname, navigate, setBackButton]);
+
   if (isLoading) {
     return (
       <div className="app-container">
@@ -118,6 +138,16 @@ function App() {
           <Route path="/apps" element={<AppsPage />} />
           <Route path="/app/:id" element={<AppDetailPage />} />
           <Route path="/profile" element={<ProfilePage username={userData.username} coins={inventoryData.coins} stars={inventoryData.stars} />} />
+          <Route path="*" element={
+            <div className="content">
+              <div className="empty-state">
+                <div className="empty-icon">❓</div>
+                <h2 className="empty-title">Страница не найдена</h2>
+                <p className="empty-description">Попробуйте вернуться на главную страницу.</p>
+                <button className="button" onClick={() => window.location.href = '/'}>На главную</button>
+              </div>
+            </div>
+          } />
         </Routes>
         <BottomMenu activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
