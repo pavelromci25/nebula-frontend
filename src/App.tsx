@@ -7,7 +7,7 @@ import HomePage from './components/HomePage';
 import AppsPage from './components/AppsPage';
 import AppDetailPage from './components/AppDetailPage';
 import ProfilePage from './components/ProfilePage';
-import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 
 export interface Game {
@@ -86,26 +86,6 @@ function App() {
 
     return () => clearInterval(interval);
   }, [userId, inventoryData.coins, error]);
-
-  // Управление кнопкой "Назад"
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    // Показываем кнопку "Назад" на страницах, кроме главной
-    if (location.pathname !== '/') {
-      setBackButton(true, () => {
-        navigate(-1); // Возвращаемся на предыдущую страницу
-      });
-    } else {
-      setBackButton(false);
-    }
-
-    // Очищаем обработчик при размонтировании
-    return () => {
-      setBackButton(false);
-    };
-  }, [location.pathname, navigate, setBackButton]);
 
   if (isLoading) {
     return (
