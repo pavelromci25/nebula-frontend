@@ -72,22 +72,28 @@ export function useTelegram() {
   useEffect(() => {
     const initializeWebApp = () => {
       return new Promise<void>((resolve) => {
-        const script = document.querySelector('script[src="https://telegram.org/js/telegram-web-app.js"]');
-        if (window.Telegram?.WebApp) {
-          console.log('Telegram Web App already initialized');
-          setIsWebAppInitialized(true);
-          resolve();
-        } else if (script) {
-          const loadHandler = () => {
-            console.log('Telegram Web App script loaded');
+        const checkWebApp = () => {
+          if (window.Telegram?.WebApp) {
+            console.log('Telegram Web App already initialized');
             setIsWebAppInitialized(true);
             resolve();
-          };
-          script.addEventListener('load', loadHandler);
-        } else {
-          console.error('Telegram Web App script not found');
-          resolve();
-        }
+          } else {
+            const script = document.querySelector('script[src="https://telegram.org/js/telegram-web-app.js"]');
+            if (script) {
+              const loadHandler = () => {
+                console.log('Telegram Web App script loaded');
+                setIsWebAppInitialized(true);
+                resolve();
+              };
+              script.addEventListener('load', loadHandler);
+            } else {
+              console.error('Telegram Web App script not found');
+              resolve();
+            }
+          }
+        };
+
+        checkWebApp();
       });
     };
 
