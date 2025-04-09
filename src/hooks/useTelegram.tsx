@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { backButton } from '@telegram-apps/sdk';
+import { init, backButton } from '@telegram-apps/sdk';
 
 interface TelegramUser {
   first_name?: string;
@@ -65,9 +65,30 @@ export function useTelegram() {
   const [isPremium, setIsPremium] = useState<boolean>(false);
   const [platform, setPlatform] = useState<string>('Неизвестно');
   const [userId, setUserId] = useState<string>('guest');
+  const [isSdkInitialized, setIsSdkInitialized] = useState(false);
+
+  // Инициализируем SDK
+  useEffect(() => {
+    const initializeSdk = async () => {
+      try {
+        await init();
+        console.log('Telegram SDK initialized successfully');
+        setIsSdkInitialized(true);
+      } catch (error) {
+        console.error('Failed to initialize Telegram SDK:', error);
+      }
+    };
+
+    initializeSdk();
+  }, []);
 
   // Функция для управления кнопкой "Назад"
   const setBackButton = (visible: boolean, onClick?: () => void) => {
+    if (!isSdkInitialized) {
+      console.warn('Telegram SDK not initialized yet, cannot set BackButton');
+      return;
+    }
+
     console.log('setBackButton called:', { visible, hasOnClick: !!onClick });
     if (visible) {
       backButton.show();
