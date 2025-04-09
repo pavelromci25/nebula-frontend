@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { FaHome, FaGamepad, FaChartBar, FaUser } from 'react-icons/fa';
+import { FaHome, FaGamepad, FaUser } from 'react-icons/fa';
 
 interface BottomMenuProps {
   activeTab: string;
@@ -30,13 +30,6 @@ const BottomMenu: React.FC<BottomMenuProps> = ({ activeTab, setActiveTab }) => {
       >
         <FaGamepad className="menu-icon" />
         Apps
-      </button>
-      <button
-        className={`menu-item ${activeTab === 'stats' ? 'active' : ''}`}
-        onClick={() => handleTabClick('stats', '/stats')}
-      >
-        <FaChartBar className="menu-icon" />
-        Статистика
       </button>
       <button
         className={`menu-item ${activeTab === 'profile' ? 'active' : ''}`}

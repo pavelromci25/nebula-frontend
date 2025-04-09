@@ -7,7 +7,6 @@ import HomePage from './components/HomePage';
 import AppsPage from './components/AppsPage';
 import AppDetailPage from './components/AppDetailPage';
 import ProfilePage from './components/ProfilePage';
-import StatsPage from './components/StatsPage';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import './App.css';
 
@@ -119,7 +118,6 @@ function App() {
           <Route path="/apps" element={<AppsPage />} />
           <Route path="/app/:id" element={<AppDetailPage />} />
           <Route path="/profile" element={<ProfilePage username={userData.username} coins={inventoryData.coins} stars={inventoryData.stars} />} />
-          <Route path="/stats" element={<StatsPage />} />
         </Routes>
         <BottomMenu activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>

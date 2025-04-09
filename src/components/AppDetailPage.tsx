@@ -22,6 +22,7 @@ interface App {
   rating?: number;
   catalogRating?: number;
   telegramStars?: number;
+  stars?: number; // Добавляем stars
   opens?: number;
   platforms?: string[];
   ageRating?: string;
@@ -97,7 +98,7 @@ const AppDetailPage: React.FC = () => {
 
   const handleDonate = async () => {
     try {
-      const stars = prompt('Сколько Telegram Stars вы хотите подарить? (Максимум 10)', '1');
+      const stars = prompt('Сколько Stars вы хотите подарить? (Максимум 10)', '1');
       const starsNum = parseInt(stars || '0', 10);
       if (isNaN(starsNum) || starsNum <= 0 || starsNum > 10) {
         alert('Пожалуйста, введите число от 1 до 10.');
@@ -109,11 +110,18 @@ const AppDetailPage: React.FC = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId, stars: starsNum }),
       });
-      const { invoiceLink } = await response.json();
-      window.open(invoiceLink, '_blank');
+      if (!response.ok) {
+        throw new Error('Ошибка при отправке доната');
+      }
+      const result = await response.json();
+      alert(result.message);
+      // Обновляем stars локально
+      if (app) {
+        setApp({ ...app, stars: (app.stars || 0) + starsNum });
+      }
     } catch (error) {
-      console.error('Ошибка при создании инвойса:', error);
-      alert('Ошибка при создании инвойса. Попробуйте позже.');
+      console.error('Ошибка при отправке доната:', error);
+      alert('Ошибка при отправке доната. Попробуйте позже.');
     }
   };
 
@@ -166,8 +174,8 @@ const AppDetailPage: React.FC = () => {
               <p className="text-[var(--tg-theme-link-color)]">#{apps.sort((a, b) => (b.catalogRating || 0) - (a.catalogRating || 0)).findIndex(a => a.id === app.id) + 1}</p>
             </div>
             <div>
-              <p className="font-medium">Telegram Stars</p>
-              <p className="text-[var(--tg-theme-link-color)]">{app.telegramStars || 0}</p>
+              <p className="font-medium">Stars</p>
+              <p className="text-[var(--tg-theme-link-color)]">{app.stars || 0}</p>
             </div>
             <div>
               <p className="font-medium">Открытия</p>
