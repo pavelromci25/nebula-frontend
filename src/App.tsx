@@ -18,6 +18,9 @@ export interface Game {
   url: string;
   imageUrl?: string;
   description?: string;
+  clicks?: number; // Добавляем clicks
+  isPromotedInCatalog?: boolean; // Добавляем isPromotedInCatalog
+  dateAdded?: string; // Добавляем dateAdded
 }
 
 export interface Referral {
@@ -102,7 +105,6 @@ function App() {
     );
   }
 
-
   return (
     <Router>
       <div className="app-container">
@@ -113,7 +115,7 @@ function App() {
           photoUrl={userData.photoUrl}
         />
         <Routes>
-          <Route path="/" element={<HomePage isFullscreen={isFullscreen} isPremium={isPremium} platform={platform} />} />
+          <Route path="/" element={<HomePage isFullscreen={isFullscreen} isPremium={isPremium} platform={platform} games={games} />} />
           <Route path="/apps" element={<AppsPage />} />
           <Route path="/app/:id" element={<AppDetailPage />} />
           <Route path="/profile" element={<ProfilePage username={userData.username} coins={inventoryData.coins} stars={inventoryData.stars} />} />

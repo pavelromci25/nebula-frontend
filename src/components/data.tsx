@@ -34,8 +34,11 @@ interface App {
   name: string;
   icon: string;
   shortDescription: string;
-  categories?: string[]; // Сделали опциональным
+  categories?: string[];
   url?: string;
+  clicks?: number; // Добавляем clicks
+  isPromotedInCatalog?: boolean; // Добавляем isPromotedInCatalog
+  dateAdded?: string; // Добавляем dateAdded
 }
 
 export const initializeAppData = async ({
@@ -130,10 +133,13 @@ export const initializeAppData = async ({
       .map((app: App) => ({
         id: app.id,
         name: app.name,
-        type: app.categories && app.categories.length > 0 ? app.categories[0] : 'unknown', // Добавляем проверку
+        type: app.categories && app.categories.length > 0 ? app.categories[0] : 'unknown',
         url: app.url || '#',
         imageUrl: app.icon,
         description: app.shortDescription,
+        clicks: app.clicks, // Добавляем clicks
+        isPromotedInCatalog: app.isPromotedInCatalog, // Добавляем isPromotedInCatalog
+        dateAdded: app.dateAdded, // Добавляем dateAdded
       }));
 
     return {
