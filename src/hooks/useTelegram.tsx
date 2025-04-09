@@ -67,19 +67,31 @@ export function useTelegram() {
   const [userId, setUserId] = useState<string>('guest');
   const [isSdkInitialized, setIsSdkInitialized] = useState(false);
 
-  // Инициализируем SDK
+  // Инициализируем SDK и монтируем backButton
   useEffect(() => {
     const initializeSdk = async () => {
       try {
         await init();
         console.log('Telegram SDK initialized successfully');
         setIsSdkInitialized(true);
+
+        // Монтируем backButton после инициализации SDK
+        backButton.mount();
+        console.log('BackButton mounted, isVisible:', backButton.isVisible);
       } catch (error) {
         console.error('Failed to initialize Telegram SDK:', error);
       }
     };
 
     initializeSdk();
+
+    // Размонтируем backButton при размонтировании хука
+    return () => {
+      if (isSdkInitialized) {
+        backButton.unmount();
+        console.log('BackButton unmounted');
+      }
+    };
   }, []);
 
   // Функция для управления кнопкой "Назад"
