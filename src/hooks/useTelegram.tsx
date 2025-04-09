@@ -68,15 +68,18 @@ export function useTelegram() {
 
   // Функция для управления кнопкой "Назад"
   const setBackButton = (visible: boolean, onClick?: () => void) => {
+    console.log('setBackButton called:', { visible, hasOnClick: !!onClick });
     if (visible) {
       backButton.show();
+      console.log('BackButton shown, isVisible:', backButton.isVisible);
       if (onClick) {
-        backButton.onClick(onClick); // Используем onClick вместо on('click')
+        backButton.onClick(onClick);
       }
     } else {
       backButton.hide();
+      console.log('BackButton hidden, isVisible:', backButton.isVisible);
       if (onClick) {
-        backButton.offClick(onClick); // Используем offClick вместо off('click')
+        backButton.offClick(onClick);
       }
     }
   };
@@ -84,6 +87,7 @@ export function useTelegram() {
   useEffect(() => {
     const loadUserData = () => {
       if (window.Telegram && window.Telegram.WebApp) {
+        console.log('Telegram Web App initialized successfully');
         const webApp = window.Telegram.WebApp;
         const initDataUnsafe = webApp.initDataUnsafe;
         const user = initDataUnsafe?.user;
@@ -99,6 +103,8 @@ export function useTelegram() {
         }
 
         setPlatform(webApp.platform || 'Неизвестно');
+      } else {
+        console.error('Telegram Web App not initialized');
       }
     };
 
@@ -106,7 +112,10 @@ export function useTelegram() {
 
     const script = document.querySelector('script[src="https://telegram.org/js/telegram-web-app.js"]');
     if (script && !window.Telegram?.WebApp) {
-      const loadHandler = () => loadUserData();
+      const loadHandler = () => {
+        console.log('Telegram Web App script loaded');
+        loadUserData();
+      };
       script.addEventListener('load', loadHandler);
       return () => script.removeEventListener('load', loadHandler);
     }

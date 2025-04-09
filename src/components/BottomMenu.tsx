@@ -1,6 +1,6 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
 import { FaHome, FaGamepad, FaUser } from 'react-icons/fa';
+import { useNavigate } from 'react-router-dom';
 
 interface BottomMenuProps {
   activeTab: string;

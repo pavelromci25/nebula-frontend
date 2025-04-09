@@ -7,7 +7,7 @@ import HomePage from './components/HomePage';
 import AppsPage from './components/AppsPage';
 import AppDetailPage from './components/AppDetailPage';
 import ProfilePage from './components/ProfilePage';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
 
 export interface Game {
@@ -87,6 +87,31 @@ function App() {
     return () => clearInterval(interval);
   }, [userId, inventoryData.coins, error]);
 
+  // Управление кнопкой "Назад"
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    console.log('Current location:', location.pathname); // Логируем текущий маршрут
+    // Показываем кнопку "Назад" на страницах, кроме главной
+    if (location.pathname !== '/nebula-frontend/') {
+      console.log('Showing BackButton for path:', location.pathname);
+      setBackButton(true, () => {
+        console.log('BackButton clicked, navigating back');
+        navigate(-1); // Возвращаемся на предыдущую страницу
+      });
+    } else {
+      console.log('Hiding BackButton for path:', location.pathname);
+      setBackButton(false);
+    }
+
+    // Очищаем обработчик при размонтировании
+    return () => {
+      console.log('Cleaning up BackButton handler');
+      setBackButton(false);
+    };
+  }, [location.pathname, navigate, setBackButton]);
+
   if (isLoading) {
     return (
       <div className="app-container">
@@ -105,7 +130,7 @@ function App() {
   }
 
   return (
-    <Router>
+    <Router basename="/nebula-frontend">
       <div className="app-container">
         <UserHeader
           username={userData.username}
@@ -124,7 +149,7 @@ function App() {
                 <div className="empty-icon">❓</div>
                 <h2 className="empty-title">Страница не найдена</h2>
                 <p className="empty-description">Попробуйте вернуться на главную страницу.</p>
-                <button className="button" onClick={() => window.location.href = '/'}>На главную</button>
+                <button className="button" onClick={() => window.location.href = '/nebula-frontend/'}>На главную</button>
               </div>
             </div>
           } />
