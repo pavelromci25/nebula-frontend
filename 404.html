@@ -4,8 +4,13 @@
     <meta charset="utf-8">
     <title>Single Page Apps for GitHub Pages</title>
     <script type="text/javascript">
-      // Перенаправляем все запросы на index.html
-      const path = window.location.pathname;
+      // Получаем текущий путь
+      let path = window.location.pathname;
+
+      // Удаляем все вхождения /nebula-frontend из пути, чтобы избежать дублирования
+      path = path.replace(/\/nebula-frontend/g, '');
+
+      // Перенаправляем на /nebula-frontend/ с оставшимся маршрутом
       window.location.replace(`/nebula-frontend${path}`);
     </script>
   </head>

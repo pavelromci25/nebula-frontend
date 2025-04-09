@@ -152,5 +152,6 @@ export function useTelegram() {
     isPremium,
     platform,
     userId,
+
   };
 }
