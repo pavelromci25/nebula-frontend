@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Single Page Apps for GitHub Pages</title>
+    <script type="text/javascript">
+      // Получаем текущий путь
+      let path = window.location.pathname;
+
+      // Удаляем все вхождения /nebula-frontend из пути, чтобы избежать дублирования
+      path = path.replace(/\/nebula-frontend/g, '');
+
+      // Перенаправляем на /nebula-frontend/ с оставшимся маршрутом
+      window.location.replace(`/nebula-frontend${path}`);
+    </script>
+  </head>
+  <body>
+    <!-- Этот файл перенаправляет на index.html -->
+  </body>
+</html>
