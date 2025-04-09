@@ -43,7 +43,7 @@ function AppContent({ games, userData, inventoryData, error, isLoading, activeTa
   useEffect(() => {
     console.log('Current location:', location.pathname);
     // Показываем кнопку "Назад" на страницах, кроме главной
-    if (location.pathname !== '/nebula-frontend/') {
+    if (location.pathname !== '/') { // Учитываем basename
       console.log('Showing BackButton for path:', location.pathname);
       setBackButton(true, () => {
         console.log('BackButton clicked, navigating back');

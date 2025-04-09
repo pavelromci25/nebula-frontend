@@ -66,6 +66,61 @@ export function useTelegram() {
   const [platform, setPlatform] = useState<string>('Неизвестно');
   const [userId, setUserId] = useState<string>('guest');
   const [isSdkInitialized, setIsSdkInitialized] = useState(false);
+  const [isWebAppInitialized, setIsWebAppInitialized] = useState(false);
+
+  // Инициализируем Telegram Web App
+  useEffect(() => {
+    const initializeWebApp = () => {
+      return new Promise<void>((resolve) => {
+        const script = document.querySelector('script[src="https://telegram.org/js/telegram-web-app.js"]');
+        if (window.Telegram?.WebApp) {
+          console.log('Telegram Web App already initialized');
+          setIsWebAppInitialized(true);
+          resolve();
+        } else if (script) {
+          const loadHandler = () => {
+            console.log('Telegram Web App script loaded');
+            setIsWebAppInitialized(true);
+            resolve();
+          };
+          script.addEventListener('load', loadHandler);
+        } else {
+          console.error('Telegram Web App script not found');
+          resolve();
+        }
+      });
+    };
+
+    const loadUserData = () => {
+      if (window.Telegram && window.Telegram.WebApp) {
+        console.log('Telegram Web App initialized successfully');
+        const webApp = window.Telegram.WebApp;
+        const initDataUnsafe = webApp.initDataUnsafe;
+        const user = initDataUnsafe?.user;
+
+        if (user) {
+          setUsername(user.first_name || 'Гость');
+          setPhotoUrl(user.photo_url || '');
+          setIsPremium(user.is_premium || false);
+          setUserId(user.id ? user.id.toString() : 'guest');
+        } else {
+          setUsername('Гость');
+          setUserId('guest');
+        }
+
+        setPlatform(webApp.platform || 'Неизвестно');
+
+        // Проверяем поддержку BackButton
+        console.log('BackButton initial state, isVisible:', backButton.isVisible);
+      } else {
+        console.error('Telegram Web App not initialized');
+      }
+    };
+
+    initializeWebApp().then(() => {
+      loadUserData();
+    });
+  }, []);
 
   // Инициализируем SDK и монтируем backButton
   useEffect(() => {
@@ -96,8 +151,8 @@ export function useTelegram() {
 
   // Функция для управления кнопкой "Назад"
   const setBackButton = (visible: boolean, onClick?: () => void) => {
-    if (!isSdkInitialized) {
-      console.warn('Telegram SDK not initialized yet, cannot set BackButton');
+    if (!isSdkInitialized || !isWebAppInitialized) {
+      console.warn('Telegram SDK or Web App not initialized yet, cannot set BackButton');
       return;
     }
 
@@ -116,46 +171,6 @@ export function useTelegram() {
       }
     }
   };
-
-  useEffect(() => {
-    const loadUserData = () => {
-      if (window.Telegram && window.Telegram.WebApp) {
-        console.log('Telegram Web App initialized successfully');
-        const webApp = window.Telegram.WebApp;
-        const initDataUnsafe = webApp.initDataUnsafe;
-        const user = initDataUnsafe?.user;
-
-        if (user) {
-          setUsername(user.first_name || 'Гость');
-          setPhotoUrl(user.photo_url || '');
-          setIsPremium(user.is_premium || false);
-          setUserId(user.id ? user.id.toString() : 'guest');
-        } else {
-          setUsername('Гость');
-          setUserId('guest');
-        }
-
-        setPlatform(webApp.platform || 'Неизвестно');
-
-        // Проверяем поддержку BackButton
-        console.log('BackButton initial state, isVisible:', backButton.isVisible);
-      } else {
-        console.error('Telegram Web App not initialized');
-      }
-    };
-
-    loadUserData();
-
-    const script = document.querySelector('script[src="https://telegram.org/js/telegram-web-app.js"]');
-    if (script && !window.Telegram?.WebApp) {
-      const loadHandler = () => {
-        console.log('Telegram Web App script loaded');
-        loadUserData();
-      };
-      script.addEventListener('load', loadHandler);
-      return () => script.removeEventListener('load', loadHandler);
-    }
-  }, []);
 
   useEffect(() => {
     if (window.Telegram && window.Telegram.WebApp) {
