@@ -40,7 +40,19 @@ function AppContent({ games, userData, inventoryData, error, isLoading, activeTa
   const location = useLocation();
   const navigate = useNavigate();
 
+  console.log('AppContent rendering, props:', { games, userData, inventoryData, error, isLoading, activeTab });
+
+  useEffect(() => {
+    console.log('Current location:', location.pathname);
+    // Уведомляем Telegram о смене страницы
+    if (window.Telegram && window.Telegram.WebApp) {
+      window.Telegram.WebApp.expand();
+      console.log('Notified Telegram of page change:', location.pathname);
+    }
+  }, [location.pathname, navigate]);
+
   if (isLoading) {
+    console.log('AppContent: Showing loading state');
     return (
       <div className="app-container">
         <p>Загрузка данных...</p>
@@ -49,6 +61,7 @@ function AppContent({ games, userData, inventoryData, error, isLoading, activeTa
   }
 
   if (error) {
+    console.log('AppContent: Showing error state', error);
     return (
       <div className="app-container">
         <p>Ошибка: {error}</p>
@@ -57,6 +70,7 @@ function AppContent({ games, userData, inventoryData, error, isLoading, activeTa
     );
   }
 
+  console.log('AppContent: Rendering main content');
   return (
     <div className="app-container">
       <UserHeader
@@ -76,7 +90,7 @@ function AppContent({ games, userData, inventoryData, error, isLoading, activeTa
               <div className="empty-icon">❓</div>
               <h2 className="empty-title">Страница не найдена</h2>
               <p className="empty-description">Попробуйте вернуться на главную страницу.</p>
-              <button className="button" onClick={() => window.location.href = '/nebula-frontend/'}>На главную</button>
+              <button className="button" onClick={() => window.location.href = '/'}>На главную</button>
             </div>
           </div>
         } />
@@ -147,7 +161,7 @@ function App() {
   }, [userId, inventoryData.coins, error]);
 
   return (
-    <Router basename="/nebula-frontend">
+    <Router basename="/"> {/* Убрали basename="/nebula-frontend" */}
       <AppContent
         games={games}
         userData={userData}
