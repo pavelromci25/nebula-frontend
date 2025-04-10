@@ -208,10 +208,14 @@ const AppDetailPage: React.FC = () => {
       <section className="section">
         <div className={`flex items-center gap-4 mb-4 ${isPromoted ? 'promoted' : ''}`} style={isPromoted ? { border: '2px solid yellow', padding: '10px', borderRadius: '8px' } : {}}>
         <img
-        src={app.icon}
+         src={app.icon}
          alt={app.name}
-           className="w-20 h-20 rounded-lg"
-           style={{ objectFit: 'cover' }} // Добавляем objectFit
+         style={{
+          width: '40px',
+          height: '40px',
+          borderRadius: '8px',
+          objectFit: 'cover',
+        }}
           />
           <div>
             <h1 className="section-title">{app.name}</h1>

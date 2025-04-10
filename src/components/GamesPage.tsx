@@ -143,8 +143,12 @@ const GamesPage: React.FC = () => {
                 <img
                   src={game.icon}
                   alt={game.name}
-                  className="w-10 h-10 rounded-lg"
-                  style={{ objectFit: 'cover' }}
+                  style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '8px',
+                    objectFit: 'cover',
+                  }}
                 />
                 <div>
                   <h3 className="game-title">{game.name}</h3>
