@@ -7,19 +7,27 @@ import HomePage from './components/HomePage';
 import AppsPage from './components/AppsPage';
 import AppDetailPage from './components/AppDetailPage';
 import ProfilePage from './components/ProfilePage';
+import GamesPage from './components/GamesPage'; // Добавляем импорт GamesPage
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import './App.css';
 
 export interface Game {
   id: string;
   name: string;
-  type: string;
+  categoryGame?: string; // Новая основная категория для игр
+  categoryApps?: string; // Новая основная категория для приложений
   url: string;
   imageUrl?: string;
   description?: string;
   clicks?: number;
   isPromotedInCatalog?: boolean;
   dateAdded?: string;
+  linkApp?: string; // Добавляем linkApp
+  startPromoCatalog?: string; // Добавляем startPromoCatalog
+  finishPromoCatalog?: string; // Добавляем finishPromoCatalog
+  startPromoCategory?: string; // Добавляем startPromoCategory
+  finishPromoCategory?: string; // Добавляем finishPromoCategory
+  editCount?: number; // Добавляем editCount
 }
 
 export interface Referral {
@@ -81,6 +89,7 @@ function AppContent({ games, userData, inventoryData, error, isLoading, activeTa
       />
       <Routes>
         <Route path="/" element={<HomePage isFullscreen={isFullscreen} isPremium={isPremium} platform={platform} games={games} />} />
+        <Route path="/games" element={<GamesPage />} /> {/* Заменяем AppsPage на GamesPage */}
         <Route path="/apps" element={<AppsPage />} />
         <Route path="/app/:id" element={<AppDetailPage />} />
         <Route path="/profile" element={<ProfilePage username={userData.username} coins={inventoryData.coins} stars={inventoryData.stars} />} />
@@ -161,7 +170,7 @@ function App() {
   }, [userId, inventoryData.coins, error]);
 
   return (
-    <Router basename="/"> {/* Убрали basename="/nebula-frontend" */}
+    <Router basename="/">
       <AppContent
         games={games}
         userData={userData}

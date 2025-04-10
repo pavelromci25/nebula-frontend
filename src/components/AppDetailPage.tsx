@@ -16,12 +16,15 @@ interface App {
   banner?: string;
   shortDescription: string;
   longDescription?: string;
-  categories?: string[];
+  categoryGame?: string;
+  categoryApps?: string;
+  additionalCategoriesGame?: string[];
+  additionalCategoriesApps?: string[];
   geo?: string;
   developer?: string;
   rating?: number;
   catalogRating?: number;
-  telegramStarsDonations?: number; // Используем telegramStarsDonations
+  telegramStarsDonations?: number;
   opens?: number;
   platforms?: string[];
   ageRating?: string;
@@ -30,6 +33,14 @@ interface App {
   gallery?: string[];
   video?: string;
   complaints?: number;
+  isPromotedInCatalog?: boolean;
+  isPromotedInCategory?: boolean;
+  linkApp?: string;
+  startPromoCatalog?: string;
+  finishPromoCatalog?: string;
+  startPromoCategory?: string;
+  finishPromoCategory?: string;
+  editCount?: number;
 }
 
 const AppDetailPage: React.FC = () => {
@@ -83,6 +94,8 @@ const AppDetailPage: React.FC = () => {
       alert('Спасибо за ваш рейтинг!');
     } catch (error) {
       console.error('Ошибка при отправке рейтинга:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      alert('Ошибка при отправке рейтинга: ' + errorMessage);
     }
   };
 
@@ -104,6 +117,8 @@ const AppDetailPage: React.FC = () => {
       alert('Жалоба отправлена. Спасибо за ваш отзыв!');
     } catch (error) {
       console.error('Ошибка при отправке жалобы:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      alert('Ошибка при отправке жалобы: ' + errorMessage);
     }
   };
 
@@ -132,7 +147,37 @@ const AppDetailPage: React.FC = () => {
       }
     } catch (error) {
       console.error('Ошибка при отправке доната:', error);
-      alert('Ошибка при отправке доната. Попробуйте позже.');
+      const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+      alert('Ошибка при отправке доната: ' + errorMessage);
+    }
+  };
+
+  const handleGetClick = async () => {
+    if (app && app.linkApp) {
+      try {
+        // Отправляем запрос на сервер для увеличения счётчика кликов
+        const response = await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${app.id}/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) {
+          throw new Error('Ошибка при увеличении счётчика кликов');
+        }
+        const result = await response.json();
+        console.log('Счётчик кликов увеличен:', result);
+        // Обновляем opens локально
+        if (app) {
+          setApp({ ...app, opens: result.clicks });
+        }
+        // Открываем ссылку в новой вкладке
+        window.open(app.linkApp, '_blank');
+      } catch (error) {
+        console.error('Ошибка при увеличении счётчика кликов:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+        alert('Ошибка при переходе по ссылке: ' + errorMessage);
+      }
+    } else {
+      alert('Ссылка на приложение недоступна.');
     }
   };
 
@@ -153,13 +198,15 @@ const AppDetailPage: React.FC = () => {
   }
 
   const similarApps = apps
-    .filter(a => a.id !== app.id && a.categories?.length && app.categories?.length && a.categories.some(cat => app.categories!.includes(cat)))
+    .filter(a => a.id !== app.id && a.type === app.type)
     .slice(0, 3);
+
+  const isPromoted = app.isPromotedInCatalog || app.isPromotedInCategory;
 
   return (
     <div className="content slide-in">
       <section className="section">
-        <div className="flex items-center gap-4 mb-4">
+        <div className={`flex items-center gap-4 mb-4 ${isPromoted ? 'promoted' : ''}`} style={isPromoted ? { border: '2px solid yellow', padding: '10px', borderRadius: '8px' } : {}}>
           <img src={app.icon} alt={app.name} className="w-20 h-20 rounded-lg" />
           <div>
             <h1 className="section-title">{app.name}</h1>
@@ -167,7 +214,7 @@ const AppDetailPage: React.FC = () => {
           </div>
         </div>
         <div className="flex gap-3">
-          <button className="button">Get</button>
+          <button className="button" onClick={handleGetClick}>Get</button>
           <button className="button">Поделиться</button>
           <button className="button" onClick={handleDonate}>Подарить Stars</button>
         </div>
@@ -186,7 +233,7 @@ const AppDetailPage: React.FC = () => {
             </div>
             <div>
               <p className="font-medium">Stars</p>
-              <p className="text-[var(--tg-theme-link-color)]">{app.telegramStarsDonations || 0}</p> {/* Используем telegramStarsDonations */}
+              <p className="text-[var(--tg-theme-link-color)]">{app.telegramStarsDonations || 0}</p>
             </div>
             <div>
               <p className="font-medium">Открытия</p>
@@ -251,7 +298,6 @@ const AppDetailPage: React.FC = () => {
               />
             ))}
           </div>
-          <button className="button" onClick={handleComplaint}>Приложение не работает</button>
         </div>
       </section>
 
@@ -261,21 +307,54 @@ const AppDetailPage: React.FC = () => {
           <p className="card-text"><strong>Разработчик:</strong> {app.developer || 'Не указан'}</p>
           <p className="card-text">
             <strong>Категории:</strong>{' '}
-            {app.categories && app.categories.length > 0 ? (
-              app.categories.map((cat, index) => (
-                <span key={cat}>
-                  <Link to={`/apps?category=${cat}`} className="text-[var(--tg-theme-link-color)]">{cat}</Link>
-                  {index < (app.categories?.length ?? 0) - 1 ? ', ' : ''}
+            {app.type === 'game' ? (
+              app.categoryGame ? (
+                <span>
+                  <Link to={`/games?category=${app.categoryGame}`} className="text-[var(--tg-theme-link-color)]">{app.categoryGame}</Link>
+                  {app.additionalCategoriesGame && app.additionalCategoriesGame.length > 0 ? ', ' : ''}
+                  {app.additionalCategoriesGame?.map((cat, index) => (
+                    <span key={cat}>
+                      <Link to={`/games?category=${cat}`} className="text-[var(--tg-theme-link-color)]">{cat}</Link>
+                      {index < (app.additionalCategoriesGame?.length ?? 0) - 1 ? ', ' : ''}
+                    </span>
+                  ))}
                 </span>
-              ))
+              ) : (
+                'Без категории'
+              )
             ) : (
-              'Без категории'
+              app.categoryApps ? (
+                <span>
+                  <Link to={`/apps?category=${app.categoryApps}`} className="text-[var(--tg-theme-link-color)]">{app.categoryApps}</Link>
+                  {app.additionalCategoriesApps && app.additionalCategoriesApps.length > 0 ? ', ' : ''}
+                  {app.additionalCategoriesApps?.map((cat, index) => (
+                    <span key={cat}>
+                      <Link to={`/apps?category=${cat}`} className="text-[var(--tg-theme-link-color)]">{cat}</Link>
+                      {index < (app.additionalCategoriesApps?.length ?? 0) - 1 ? ', ' : ''}
+                    </span>
+                  ))}
+                </span>
+              ) : (
+                'Без категории'
+              )
             )}
           </p>
           <p className="card-text"><strong>Игровые покупки:</strong> {app.inAppPurchases !== undefined ? (app.inAppPurchases ? 'Да' : 'Нет') : 'Не указано'}</p>
           <p className="card-text"><strong>Возрастной рейтинг:</strong> {app.ageRating || 'Не указано'}</p>
           <p className="card-text"><strong>Платформы:</strong> {app.platforms && app.platforms.length > 0 ? app.platforms.join(', ') : 'Не указано'}</p>
           <p className="card-text"><strong>Дата добавления:</strong> {app.dateAdded}</p>
+          <p className="card-text"><strong>Количество редакций:</strong> {app.editCount || 0}</p>
+          {app.startPromoCatalog && app.finishPromoCatalog && (
+            <p className="card-text">
+              <strong>Продвижение в каталоге:</strong> с {new Date(app.startPromoCatalog).toLocaleString()} до {new Date(app.finishPromoCatalog).toLocaleString()}
+            </p>
+          )}
+          {app.startPromoCategory && app.finishPromoCategory && (
+            <p className="card-text">
+              <strong>Продвижение в категории:</strong> с {new Date(app.startPromoCategory).toLocaleString()} до {new Date(app.finishPromoCategory).toLocaleString()}
+            </p>
+          )}
+          <button className="button" onClick={handleComplaint}>Приложение не работает</button>
         </div>
       </section>
 
@@ -292,7 +371,12 @@ const AppDetailPage: React.FC = () => {
         <h2 className="section-title">Похожие приложения</h2>
         <div className="games-grid">
           {similarApps.map(similarApp => (
-            <Link to={`/app/${similarApp.id}`} key={similarApp.id} className="game-card">
+            <Link
+              to={`/app/${similarApp.id}`}
+              key={similarApp.id}
+              className={`game-card ${similarApp.isPromotedInCatalog ? 'promoted' : ''}`}
+              style={similarApp.isPromotedInCatalog ? { border: '2px solid yellow' } : {}}
+            >
               <div className="flex items-center gap-3">
                 <img src={similarApp.icon} alt={similarApp.name} className="w-10 h-10 rounded-lg" />
                 <div>

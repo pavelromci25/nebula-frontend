@@ -34,11 +34,20 @@ interface App {
   name: string;
   icon: string;
   shortDescription: string;
-  categories?: string[];
+  categoryGame?: string;
+  categoryApps?: string;
+  additionalCategoriesGame?: string[];
+  additionalCategoriesApps?: string[];
   url?: string;
-  clicks?: number; // Добавляем clicks
-  isPromotedInCatalog?: boolean; // Добавляем isPromotedInCatalog
-  dateAdded?: string; // Добавляем dateAdded
+  clicks?: number;
+  isPromotedInCatalog?: boolean;
+  dateAdded?: string;
+  linkApp?: string;
+  startPromoCatalog?: string;
+  finishPromoCatalog?: string;
+  startPromoCategory?: string;
+  finishPromoCategory?: string;
+  editCount?: number;
 }
 
 export const initializeAppData = async ({
@@ -127,20 +136,25 @@ export const initializeAppData = async ({
     }
     const appsData = await appsResponse.json();
 
-    // Фильтруем только игры для совместимости с текущей логикой
-    const games: Game[] = appsData
-      .filter((app: App) => app.type === 'game')
-      .map((app: App) => ({
-        id: app.id,
-        name: app.name,
-        type: app.categories && app.categories.length > 0 ? app.categories[0] : 'unknown',
-        url: app.url || '#',
-        imageUrl: app.icon,
-        description: app.shortDescription,
-        clicks: app.clicks, // Добавляем clicks
-        isPromotedInCatalog: app.isPromotedInCatalog, // Добавляем isPromotedInCatalog
-        dateAdded: app.dateAdded, // Добавляем dateAdded
-      }));
+    // Маппим данные из API в формат Game
+    const games: Game[] = appsData.map((app: App) => ({
+      id: app.id,
+      name: app.name,
+      categoryGame: app.type === 'game' ? app.categoryGame : undefined,
+      categoryApps: app.type === 'app' ? app.categoryApps : undefined,
+      url: app.url || '#',
+      imageUrl: app.icon,
+      description: app.shortDescription,
+      clicks: app.clicks,
+      isPromotedInCatalog: app.isPromotedInCatalog,
+      dateAdded: app.dateAdded,
+      linkApp: app.linkApp, // Добавляем linkApp
+      startPromoCatalog: app.startPromoCatalog, // Добавляем startPromoCatalog
+      finishPromoCatalog: app.finishPromoCatalog, // Добавляем finishPromoCatalog
+      startPromoCategory: app.startPromoCategory, // Добавляем startPromoCategory
+      finishPromoCategory: app.finishPromoCategory, // Добавляем finishPromoCategory
+      editCount: app.editCount, // Добавляем editCount
+    }));
 
     return {
       userData,

@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaHome, FaGamepad, FaUser } from 'react-icons/fa';
+import { FaHome, FaGamepad, FaCube, FaUser } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 
 interface BottomMenuProps {
@@ -25,10 +25,17 @@ const BottomMenu: React.FC<BottomMenuProps> = ({ activeTab, setActiveTab }) => {
         Главная
       </button>
       <button
+        className={`menu-item ${activeTab === 'games' ? 'active' : ''}`}
+        onClick={() => handleTabClick('games', '/games')}
+      >
+        <FaGamepad className="menu-icon" />
+        Games
+      </button>
+      <button
         className={`menu-item ${activeTab === 'apps' ? 'active' : ''}`}
         onClick={() => handleTabClick('apps', '/apps')}
       >
-        <FaGamepad className="menu-icon" />
+        <FaCube className="menu-icon" />
         Apps
       </button>
       <button

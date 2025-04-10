@@ -2,18 +2,6 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import '../App.css';
 
-interface Game {
-  id: string;
-  name: string;
-  type: string;
-  url: string;
-  imageUrl?: string;
-  description?: string;
-  clicks?: number;
-  isPromotedInCatalog?: boolean;
-  dateAdded?: string;
-}
-
 interface HomePageProps {
   isFullscreen: boolean;
   isPremium: boolean;
@@ -21,7 +9,28 @@ interface HomePageProps {
   games: Game[];
 }
 
+interface Game {
+  id: string;
+  name: string;
+  categoryGame?: string; // Новая основная категория для игр
+  categoryApps?: string; // Новая основная категория для приложений
+  url: string;
+  imageUrl?: string;
+  description?: string;
+  clicks?: number;
+  isPromotedInCatalog?: boolean;
+  dateAdded?: string;
+  linkApp?: string;
+  startPromoCatalog?: string;
+  finishPromoCatalog?: string;
+  startPromoCategory?: string;
+  finishPromoCategory?: string;
+  editCount?: number;
+}
+
 const HomePage: React.FC<HomePageProps> = ({ games }) => {
+  console.log('HomePage rendering, props:', { games });
+
   // Сортировка для блока "Популярное" (по кликам)
   const popularGames = [...games]
     .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
@@ -47,7 +56,12 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
         ) : (
           <div className="games-grid">
             {popularGames.map(game => (
-              <Link to={`/app/${game.id}`} key={game.id} className="game-card">
+              <Link
+                to={`/app/${game.id}`}
+                key={game.id}
+                className={`game-card ${game.isPromotedInCatalog ? 'promoted' : ''}`}
+                style={game.isPromotedInCatalog ? { border: '2px solid yellow' } : {}}
+              >
                 <div className="flex items-center gap-3">
                   <img src={game.imageUrl} alt={game.name} className="w-10 h-10 rounded-lg" />
                   <div>
@@ -70,7 +84,12 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
         ) : (
           <div className="games-grid">
             {editorsChoice.map(game => (
-              <Link to={`/app/${game.id}`} key={game.id} className="game-card">
+              <Link
+                to={`/app/${game.id}`}
+                key={game.id}
+                className={`game-card ${game.isPromotedInCatalog ? 'promoted' : ''}`}
+                style={game.isPromotedInCatalog ? { border: '2px solid yellow' } : {}}
+              >
                 <div className="flex items-center gap-3">
                   <img src={game.imageUrl} alt={game.name} className="w-10 h-10 rounded-lg" />
                   <div>
@@ -93,7 +112,12 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
         ) : (
           <div className="games-grid">
             {newGames.map(game => (
-              <Link to={`/app/${game.id}`} key={game.id} className="game-card">
+              <Link
+                to={`/app/${game.id}`}
+                key={game.id}
+                className={`game-card ${game.isPromotedInCatalog ? 'promoted' : ''}`}
+                style={game.isPromotedInCatalog ? { border: '2px solid yellow' } : {}}
+              >
                 <div className="flex items-center gap-3">
                   <img src={game.imageUrl} alt={game.name} className="w-10 h-10 rounded-lg" />
                   <div>

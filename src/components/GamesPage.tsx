@@ -30,33 +30,33 @@ interface App {
   finishPromoCategory?: string;
 }
 
-const AppsPage: React.FC = () => {
+const GamesPage: React.FC = () => {
   const [category, setCategory] = useState<string>('Все');
   const [geoFilter, setGeoFilter] = useState<string>('Все');
-  const [apps, setApps] = useState<App[]>([]);
-  const [filteredApps, setFilteredApps] = useState<App[]>([]);
+  const [games, setGames] = useState<App[]>([]);
+  const [filteredGames, setFilteredGames] = useState<App[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchApps = async () => {
+    const fetchGames = async () => {
       try {
         const response = await fetch('https://nebula-server-ypun.onrender.com/api/apps');
         const data = await response.json();
-        // Фильтруем только приложения
-        const appsData = data.filter((app: App) => app.type === 'app');
-        setApps(appsData);
-        setFilteredApps(appsData);
+        // Фильтруем только игры
+        const gamesData = data.filter((app: App) => app.type === 'game');
+        setGames(gamesData);
+        setFilteredGames(gamesData);
         setIsLoading(false);
       } catch (error) {
-        console.error('Ошибка при загрузке приложений:', error);
+        console.error('Ошибка при загрузке игр:', error);
         setIsLoading(false);
       }
     };
-    fetchApps();
+    fetchGames();
   }, []);
 
   useEffect(() => {
-    let filtered = apps;
+    let filtered = games;
 
     if (category !== 'Все') {
       filtered = filtered.filter(app => app.categories && app.categories.includes(category));
@@ -66,18 +66,18 @@ const AppsPage: React.FC = () => {
       filtered = filtered.filter(app => app.geo === geoFilter);
     }
 
-    setFilteredApps(filtered);
-  }, [category, geoFilter, apps]);
+    setFilteredGames(filtered);
+  }, [category, geoFilter, games]);
 
   if (isLoading) {
     return <div className="content">Загрузка...</div>;
   }
 
-  const categories = ['Все', ...new Set(apps.flatMap(app => app.categories || []))];
-  const geoOptions = ['Все', 'Россия', 'США', 'Германия'];
+  const categories = ['Все', ...new Set(games.flatMap(app => app.categories || []))];
+  
 
   // Обновлённая формула рейтинга с учётом Telegram Stars
-  const rankedApps = [...filteredApps].sort((a, b) => {
+  const rankedGames = [...filteredGames].sort((a, b) => {
     const scoreA = (a.rating || 0) * 0.2 + (a.catalogRating || 0) * 0.2 + (a.telegramStars || 0) * 0.3 + (a.opens || 0) * 0.0001;
     const scoreB = (b.rating || 0) * 0.2 + (b.catalogRating || 0) * 0.2 + (b.telegramStars || 0) * 0.3 + (b.opens || 0) * 0.0001;
     return scoreB - scoreA;
@@ -87,15 +87,6 @@ const AppsPage: React.FC = () => {
     <div className="content slide-in">
       <section className="section">
         <div className="category-tabs">
-          {geoOptions.map(geo => (
-            <button
-              key={geo}
-              className={`category-tab ${geoFilter === geo ? 'active' : ''}`}
-              onClick={() => setGeoFilter(geo)}
-            >
-              {geo}
-            </button>
-          ))}
         </div>
       </section>
 
@@ -114,15 +105,15 @@ const AppsPage: React.FC = () => {
       </section>
 
       <section className="section">
-        <h2 className="section-title">Рейтинг приложений</h2>
+        <h2 className="section-title">Рейтинг игр</h2>
         <div className="games-grid">
-          {rankedApps.map(app => (
-            <Link to={`/app/${app.id}`} key={app.id} className="game-card">
+          {rankedGames.map(game => (
+            <Link to={`/app/${game.id}`} key={game.id} className="game-card">
               <div className="flex items-center gap-3">
-                <img src={app.icon} alt={app.name} className="w-10 h-10 rounded-lg" />
+                <img src={game.icon} alt={game.name} className="w-10 h-10 rounded-lg" />
                 <div>
-                  <h3 className="game-title">{app.name}</h3>
-                  <p className="card-text">{app.shortDescription}</p>
+                  <h3 className="game-title">{game.name}</h3>
+                  <p className="card-text">{game.shortDescription}</p>
                 </div>
               </div>
               <button className="game-button">Get</button>
@@ -134,4 +125,4 @@ const AppsPage: React.FC = () => {
   );
 };
 
-export default AppsPage;
+export default GamesPage;
