@@ -144,9 +144,9 @@ const GamesPage: React.FC = () => {
                   src={game.icon}
                   alt={game.name}
                   style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '8px',
+                    width: '125px',
+                    height: '125px',
+                    borderRadius: '10px',
                     objectFit: 'cover',
                   }}
                 />
