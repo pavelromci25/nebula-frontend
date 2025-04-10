@@ -99,7 +99,12 @@ const AppsPage: React.FC = () => {
         console.log('Счётчик кликов увеличен:', result);
         setApps(apps.map(app => app.id === appId ? { ...app, opens: result.clicks } : app));
         setFilteredApps(filteredApps.map(app => app.id === appId ? { ...app, opens: result.clicks } : app));
-        window.open(linkApp, '_blank');
+  
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.openTelegramLink(linkApp);
+        } else {
+          window.open(linkApp, '_blank');
+        }
       } catch (error) {
         console.error('Ошибка при увеличении счётчика кликов:', error);
         const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';

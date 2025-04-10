@@ -48,6 +48,7 @@ interface TelegramWebApp {
   disableVerticalSwipes: () => void;
   onEvent: (event: string, callback: () => void) => void;
   offEvent: (event: string, callback: () => void) => void;
+  openTelegramLink: (url: string) => void; // Добавляем метод openTelegramLink
 }
 
 declare global {
@@ -116,7 +117,6 @@ export function useTelegram() {
 
         setPlatform(webApp.platform || 'Неизвестно');
 
-        // Проверяем поддержку BackButton
         console.log('BackButton initial state, isVisible:', backButton.isVisible);
       } else {
         console.error('Telegram Web App not initialized');
@@ -152,6 +152,5 @@ export function useTelegram() {
     isPremium,
     platform,
     userId,
-
   };
 }

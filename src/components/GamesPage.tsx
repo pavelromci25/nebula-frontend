@@ -85,6 +85,7 @@ const GamesPage: React.FC = () => {
     return scoreB - scoreA;
   });
 
+  
   const handleGetClick = async (appId: string, linkApp?: string) => {
     if (linkApp) {
       try {
@@ -99,7 +100,14 @@ const GamesPage: React.FC = () => {
         console.log('Счётчик кликов увеличен:', result);
         setGames(games.map(app => app.id === appId ? { ...app, opens: result.clicks } : app));
         setFilteredGames(filteredGames.map(app => app.id === appId ? { ...app, opens: result.clicks } : app));
-        window.open(linkApp, '_blank');
+  
+        // Используем Telegram.WebApp.openTelegramLink для переадресации
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.openTelegramLink(linkApp);
+        } else {
+          // Fallback для десктопа или случаев, когда Telegram.WebApp недоступен
+          window.open(linkApp, '_blank');
+        }
       } catch (error) {
         console.error('Ошибка при увеличении счётчика кликов:', error);
         const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
@@ -109,6 +117,7 @@ const GamesPage: React.FC = () => {
       alert('Ссылка на приложение недоступна.');
     }
   };
+
 
   return (
     <div className="content slide-in">

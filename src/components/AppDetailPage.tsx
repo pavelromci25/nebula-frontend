@@ -155,7 +155,6 @@ const AppDetailPage: React.FC = () => {
   const handleGetClick = async () => {
     if (app && app.linkApp) {
       try {
-        // Отправляем запрос на сервер для увеличения счётчика кликов
         const response = await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${app.id}/click`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -165,12 +164,15 @@ const AppDetailPage: React.FC = () => {
         }
         const result = await response.json();
         console.log('Счётчик кликов увеличен:', result);
-        // Обновляем opens локально
         if (app) {
           setApp({ ...app, opens: result.clicks });
         }
-        // Открываем ссылку в новой вкладке
-        window.open(app.linkApp, '_blank');
+  
+        if (window.Telegram && window.Telegram.WebApp) {
+          window.Telegram.WebApp.openTelegramLink(app.linkApp);
+        } else {
+          window.open(app.linkApp, '_blank');
+        }
       } catch (error) {
         console.error('Ошибка при увеличении счётчика кликов:', error);
         const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';

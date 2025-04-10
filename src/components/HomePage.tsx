@@ -43,28 +43,33 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
     .sort((a, b) => new Date(b.dateAdded || '').getTime() - new Date(a.dateAdded || '').getTime())
     .slice(0, 5);
 
-  const handleGetClick = async (appId: string, linkApp?: string) => {
-    if (linkApp) {
-      try {
-        const response = await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${appId}/click`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-        if (!response.ok) {
-          throw new Error('Ошибка при увеличении счётчика кликов');
+    const handleGetClick = async (appId: string, linkApp?: string) => {
+      if (linkApp) {
+        try {
+          const response = await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${appId}/click`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+          });
+          if (!response.ok) {
+            throw new Error('Ошибка при увеличении счётчика кликов');
+          }
+          const result = await response.json();
+          console.log('Счётчик кликов увеличен:', result);
+    
+          if (window.Telegram && window.Telegram.WebApp) {
+            window.Telegram.WebApp.openTelegramLink(linkApp);
+          } else {
+            window.open(linkApp, '_blank');
+          }
+        } catch (error) {
+          console.error('Ошибка при увеличении счётчика кликов:', error);
+          const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+          alert('Ошибка при переходе по ссылке: ' + errorMessage);
         }
-        const result = await response.json();
-        console.log('Счётчик кликов увеличен:', result);
-        window.open(linkApp, '_blank');
-      } catch (error) {
-        console.error('Ошибка при увеличении счётчика кликов:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
-        alert('Ошибка при переходе по ссылке: ' + errorMessage);
+      } else {
+        alert('Ссылка на приложение недоступна.');
       }
-    } else {
-      alert('Ссылка на приложение недоступна.');
-    }
-  };
+    };
 
   return (
     <div className="content">
@@ -81,7 +86,12 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
                 className="game-card"
               >
                 <div className="flex items-center gap-3">
-                  <img src={game.imageUrl} alt={game.name} className="w-10 h-10 rounded-lg" />
+                  <img src={game.imageUrl} alt={game.name} style={{
+          width: '125px',
+          height: '125px',
+          borderRadius: '10px',
+          objectFit: 'cover',
+        }} />
                   <div>
                     <h3 className="game-title">{game.name}</h3>
                     <p className="card-text">{game.description}</p>
