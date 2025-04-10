@@ -34,7 +34,6 @@ interface App {
 
 const AppsPage: React.FC = () => {
   const [category, setCategory] = useState<string>('Все');
-  const [geoFilter, setGeoFilter] = useState<string>('Все');
   const [apps, setApps] = useState<App[]>([]);
   const [filteredApps, setFilteredApps] = useState<App[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,23 +58,18 @@ const AppsPage: React.FC = () => {
   useEffect(() => {
     let filtered = apps;
 
-    if (geoFilter !== 'Все') {
-      filtered = filtered.filter(app => app.geo === geoFilter);
-    }
-
     if (category !== 'Все') {
       filtered = filtered.filter(app => app.categories && app.categories.includes(category));
     }
 
     setFilteredApps(filtered);
-  }, [category, geoFilter, apps]);
+  }, [category, apps]);
 
   if (isLoading) {
     return <div className="content">Загрузка...</div>;
   }
 
   const categories = ['Все', ...new Set(apps.flatMap(app => app.categories || []))];
-  const geoOptions = ['Все', 'Россия', 'США', 'Германия'];
 
   const rankedApps = [...filteredApps].sort((a, b) => {
     if (a.isPromotedInCatalog && !b.isPromotedInCatalog) return -1;
@@ -120,20 +114,6 @@ const AppsPage: React.FC = () => {
     <div className="content slide-in">
       <section className="section">
         <div className="category-tabs">
-          {geoOptions.map(geo => (
-            <button
-              key={geo}
-              className={`category-tab ${geoFilter === geo ? 'active' : ''}`}
-              onClick={() => setGeoFilter(geo)}
-            >
-              {geo}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="category-tabs">
           {categories.map(cat => (
             <button
               key={cat}
@@ -160,7 +140,12 @@ const AppsPage: React.FC = () => {
               }}
             >
               <div className="flex items-center gap-3">
-                <img src={app.icon} alt={app.name} className="w-10 h-10 rounded-lg" />
+                <img
+                  src={app.icon}
+                  alt={app.name}
+                  className="w-10 h-10 rounded-lg"
+                  style={{ objectFit: 'cover' }}
+                />
                 <div>
                   <h3 className="game-title">{app.name}</h3>
                   <p className="card-text">{app.shortDescription}</p>

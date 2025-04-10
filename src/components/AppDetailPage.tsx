@@ -207,7 +207,12 @@ const AppDetailPage: React.FC = () => {
     <div className="content slide-in">
       <section className="section">
         <div className={`flex items-center gap-4 mb-4 ${isPromoted ? 'promoted' : ''}`} style={isPromoted ? { border: '2px solid yellow', padding: '10px', borderRadius: '8px' } : {}}>
-          <img src={app.icon} alt={app.name} className="w-20 h-20 rounded-lg" />
+        <img
+        src={app.icon}
+         alt={app.name}
+           className="w-20 h-20 rounded-lg"
+           style={{ objectFit: 'cover' }} // Добавляем objectFit
+          />
           <div>
             <h1 className="section-title">{app.name}</h1>
             <p className="card-text">{app.shortDescription}</p>

@@ -34,7 +34,6 @@ interface App {
 
 const GamesPage: React.FC = () => {
   const [category, setCategory] = useState<string>('Все');
-  const [geoFilter, setGeoFilter] = useState<string>('Все');
   const [games, setGames] = useState<App[]>([]);
   const [filteredGames, setFilteredGames] = useState<App[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -59,37 +58,28 @@ const GamesPage: React.FC = () => {
   useEffect(() => {
     let filtered = games;
 
-    if (geoFilter !== 'Все') {
-      filtered = filtered.filter(app => app.geo === geoFilter);
-    }
-
     if (category !== 'Все') {
       filtered = filtered.filter(app => app.categories && app.categories.includes(category));
     }
 
     setFilteredGames(filtered);
-  }, [category, geoFilter, games]);
+  }, [category, games]);
 
   if (isLoading) {
     return <div className="content">Загрузка...</div>;
   }
 
   const categories = ['Все', ...new Set(games.flatMap(app => app.categories || []))];
-  const geoOptions = ['Все', 'Россия', 'США', 'Германия'];
 
-  // Сортировка с учётом продвижения
   const rankedGames = [...filteredGames].sort((a, b) => {
-    // Приоритет 1: Продвижение в каталоге (всегда вверху)
     if (a.isPromotedInCatalog && !b.isPromotedInCatalog) return -1;
     if (!a.isPromotedInCatalog && b.isPromotedInCatalog) return 1;
 
-    // Приоритет 2: Продвижение в категории (вверху своей категории)
     if (category !== 'Все') {
       if (a.isPromotedInCategory && !b.isPromotedInCategory) return -1;
       if (!a.isPromotedInCategory && b.isPromotedInCategory) return 1;
     }
 
-    // Приоритет 3: Обычная сортировка по рейтингу
     const scoreA = (a.rating || 0) * 0.2 + (a.catalogRating || 0) * 0.2 + (a.telegramStars || 0) * 0.3 + (a.opens || 0) * 0.0001;
     const scoreB = (b.rating || 0) * 0.2 + (b.catalogRating || 0) * 0.2 + (b.telegramStars || 0) * 0.3 + (b.opens || 0) * 0.0001;
     return scoreB - scoreA;
@@ -124,20 +114,6 @@ const GamesPage: React.FC = () => {
     <div className="content slide-in">
       <section className="section">
         <div className="category-tabs">
-          {geoOptions.map(geo => (
-            <button
-              key={geo}
-              className={`category-tab ${geoFilter === geo ? 'active' : ''}`}
-              onClick={() => setGeoFilter(geo)}
-            >
-              {geo}
-            </button>
-          ))}
-        </div>
-      </section>
-
-      <section className="section">
-        <div className="category-tabs">
           {categories.map(cat => (
             <button
               key={cat}
@@ -164,7 +140,12 @@ const GamesPage: React.FC = () => {
               }}
             >
               <div className="flex items-center gap-3">
-                <img src={game.icon} alt={game.name} className="w-10 h-10 rounded-lg" />
+                <img
+                  src={game.icon}
+                  alt={game.name}
+                  className="w-10 h-10 rounded-lg"
+                  style={{ objectFit: 'cover' }}
+                />
                 <div>
                   <h3 className="game-title">{game.name}</h3>
                   <p className="card-text">{game.shortDescription}</p>
