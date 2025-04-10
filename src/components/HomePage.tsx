@@ -81,10 +81,10 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
           <div className="games-grid">
             {popularGames.map(game => (
               <Link
-                to={`/app/${game.id}`}
-                key={game.id}
-                className="game-card"
-              >
+              to={`/app/${game.id}`}
+              key={game.id}
+              className="game-card"
+            >
                 <div className="flex items-center gap-3">
                   <img src={game.imageUrl} alt={game.name} style={{
           width: '125px',
@@ -97,7 +97,7 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
                     <p className="card-text">{game.description}</p>
                   </div>
                 </div>
-                <button className="game-button" onClick={(e) => { e.preventDefault(); handleGetClick(game.id, game.linkApp); }}>Get</button>
+                <button className="game-button">Get</button> {/* Убираем onClick */}
               </Link>
             ))}
           </div>
@@ -112,18 +112,23 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
           <div className="games-grid">
             {editorsChoice.map(game => (
               <Link
-                to={`/app/${game.id}`}
-                key={game.id}
-                className="game-card"
-              >
+              to={`/app/${game.id}`}
+              key={game.id}
+              className="game-card"
+            >
                 <div className="flex items-center gap-3">
-                  <img src={game.imageUrl} alt={game.name} className="w-10 h-10 rounded-lg" />
+                  <img src={game.imageUrl} alt={game.name} style={{
+                    width: '125px',
+                    height: '125px',
+                    borderRadius: '10px',
+                    objectFit: 'cover',
+                  }} />
                   <div>
                     <h3 className="game-title">{game.name}</h3>
                     <p className="card-text">{game.description}</p>
                   </div>
                 </div>
-                <button className="game-button" onClick={(e) => { e.preventDefault(); handleGetClick(game.id, game.linkApp); }}>Get</button>
+                <button className="game-button">Get</button> {/* Убираем onClick */}
               </Link>
             ))}
           </div>
@@ -138,18 +143,23 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
           <div className="games-grid">
             {newGames.map(game => (
               <Link
-                to={`/app/${game.id}`}
-                key={game.id}
-                className="game-card"
-              >
+              to={`/app/${game.id}`}
+              key={game.id}
+              className="game-card"
+            >
                 <div className="flex items-center gap-3">
-                  <img src={game.imageUrl} alt={game.name} className="w-10 h-10 rounded-lg" />
+                  <img src={game.imageUrl} alt={game.name} style={{
+                    width: '125px',
+                    height: '125px',
+                    borderRadius: '10px',
+                    objectFit: 'cover',
+                  }} />
                   <div>
                     <h3 className="game-title">{game.name}</h3>
                     <p className="card-text">{game.description}</p>
                   </div>
                 </div>
-                <button className="game-button" onClick={(e) => { e.preventDefault(); handleGetClick(game.id, game.linkApp); }}>Get</button>
+                <button className="game-button">Get</button> {/* Убираем onClick */}
               </Link>
             ))}
           </div>

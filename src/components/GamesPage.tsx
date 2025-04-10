@@ -137,17 +137,18 @@ const GamesPage: React.FC = () => {
 
       <section className="section">
         <h2 className="section-title">Рейтинг игр</h2>
+        
         <div className="games-grid">
-          {rankedGames.map(game => (
-            <Link
-              to={`/app/${game.id}`}
-              key={game.id}
-              className={`game-card ${game.isPromotedInCatalog ? 'promoted-catalog' : ''} ${game.isPromotedInCategory ? 'promoted-category' : ''}`}
-              style={{
-                ...(game.isPromotedInCatalog ? { border: '2px solid yellow' } : {}),
-                ...(game.isPromotedInCategory && !game.isPromotedInCatalog ? { border: '2px solid orange' } : {}),
-              }}
-            >
+  {rankedGames.map(game => (
+    <Link
+      to={`/app/${game.id}`}
+      key={game.id}
+      className={`game-card ${game.isPromotedInCatalog ? 'promoted-catalog' : ''} ${game.isPromotedInCategory ? 'promoted-category' : ''}`}
+      style={{
+        ...(game.isPromotedInCatalog ? { border: '2px solid yellow' } : {}),
+        ...(game.isPromotedInCategory && !game.isPromotedInCatalog ? { border: '2px solid orange' } : {}),
+      }}
+    >
               <div className="flex items-center gap-3">
                 <img
                   src={game.icon}
@@ -159,13 +160,13 @@ const GamesPage: React.FC = () => {
                     objectFit: 'cover',
                   }}
                 />
-                <div>
-                  <h3 className="game-title">{game.name}</h3>
-                  <p className="card-text">{game.shortDescription}</p>
-                </div>
-              </div>
-              <button className="game-button" onClick={(e) => { e.preventDefault(); handleGetClick(game.id, game.linkApp); }}>Get</button>
-            </Link>
+<div>
+          <h3 className="game-title">{game.name}</h3>
+          <p className="card-text">{game.shortDescription}</p>
+        </div>
+      </div>
+      <button className="game-button">Get</button> {/* Убираем onClick, так как Link уже перенаправляет */}
+    </Link>
           ))}
         </div>
       </section>

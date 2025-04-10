@@ -134,16 +134,16 @@ const AppsPage: React.FC = () => {
       <section className="section">
         <h2 className="section-title">Рейтинг приложений</h2>
         <div className="games-grid">
-          {rankedApps.map(app => (
-            <Link
-              to={`/app/${app.id}`}
-              key={app.id}
-              className={`game-card ${app.isPromotedInCatalog ? 'promoted-catalog' : ''} ${app.isPromotedInCategory ? 'promoted-category' : ''}`}
-              style={{
-                ...(app.isPromotedInCatalog ? { border: '2px solid yellow' } : {}),
-                ...(app.isPromotedInCategory && !app.isPromotedInCatalog ? { border: '2px solid orange' } : {}),
-              }}
-            >
+  {rankedApps.map(app => (
+    <Link
+      to={`/app/${app.id}`}
+      key={app.id}
+      className={`game-card ${app.isPromotedInCatalog ? 'promoted-catalog' : ''} ${app.isPromotedInCategory ? 'promoted-category' : ''}`}
+      style={{
+        ...(app.isPromotedInCatalog ? { border: '2px solid yellow' } : {}),
+        ...(app.isPromotedInCategory && !app.isPromotedInCatalog ? { border: '2px solid orange' } : {}),
+      }}
+    >
               <div className="flex items-center gap-3">
                 <img
                   src={app.icon}
@@ -156,12 +156,12 @@ const AppsPage: React.FC = () => {
                   }}
                 />
                 <div>
-                  <h3 className="game-title">{app.name}</h3>
-                  <p className="card-text">{app.shortDescription}</p>
-                </div>
-              </div>
-              <button className="game-button" onClick={(e) => { e.preventDefault(); handleGetClick(app.id, app.linkApp); }}>Get</button>
-            </Link>
+          <h3 className="game-title">{app.name}</h3>
+          <p className="card-text">{app.shortDescription}</p>
+        </div>
+      </div>
+      <button className="game-button">Get</button> {/* Убираем onClick */}
+    </Link>
           ))}
         </div>
       </section>
