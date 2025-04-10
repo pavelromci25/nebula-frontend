@@ -7,7 +7,7 @@
 /coverage
 
 # Сборка
-/build
+/dist
 
 # Разное
 .DS_Store
