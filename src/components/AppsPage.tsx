@@ -28,6 +28,8 @@ interface App {
   finishPromoCatalog?: string;
   startPromoCategory?: string;
   finishPromoCategory?: string;
+  isPromotedInCatalog?: boolean;
+  isPromotedInCategory?: boolean;
 }
 
 const AppsPage: React.FC = () => {
@@ -42,7 +44,6 @@ const AppsPage: React.FC = () => {
       try {
         const response = await fetch('https://nebula-server-ypun.onrender.com/api/apps');
         const data = await response.json();
-        // Фильтруем только приложения
         const appsData = data.filter((app: App) => app.type === 'app');
         setApps(appsData);
         setFilteredApps(appsData);
@@ -58,12 +59,12 @@ const AppsPage: React.FC = () => {
   useEffect(() => {
     let filtered = apps;
 
-    if (category !== 'Все') {
-      filtered = filtered.filter(app => app.categories && app.categories.includes(category));
-    }
-
     if (geoFilter !== 'Все') {
       filtered = filtered.filter(app => app.geo === geoFilter);
+    }
+
+    if (category !== 'Все') {
+      filtered = filtered.filter(app => app.categories && app.categories.includes(category));
     }
 
     setFilteredApps(filtered);
@@ -76,12 +77,44 @@ const AppsPage: React.FC = () => {
   const categories = ['Все', ...new Set(apps.flatMap(app => app.categories || []))];
   const geoOptions = ['Все', 'Россия', 'США', 'Германия'];
 
-  // Обновлённая формула рейтинга с учётом Telegram Stars
   const rankedApps = [...filteredApps].sort((a, b) => {
+    if (a.isPromotedInCatalog && !b.isPromotedInCatalog) return -1;
+    if (!a.isPromotedInCatalog && b.isPromotedInCatalog) return 1;
+
+    if (category !== 'Все') {
+      if (a.isPromotedInCategory && !b.isPromotedInCategory) return -1;
+      if (!a.isPromotedInCategory && b.isPromotedInCategory) return 1;
+    }
+
     const scoreA = (a.rating || 0) * 0.2 + (a.catalogRating || 0) * 0.2 + (a.telegramStars || 0) * 0.3 + (a.opens || 0) * 0.0001;
     const scoreB = (b.rating || 0) * 0.2 + (b.catalogRating || 0) * 0.2 + (b.telegramStars || 0) * 0.3 + (b.opens || 0) * 0.0001;
     return scoreB - scoreA;
   });
+
+  const handleGetClick = async (appId: string, linkApp?: string) => {
+    if (linkApp) {
+      try {
+        const response = await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${appId}/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) {
+          throw new Error('Ошибка при увеличении счётчика кликов');
+        }
+        const result = await response.json();
+        console.log('Счётчик кликов увеличен:', result);
+        setApps(apps.map(app => app.id === appId ? { ...app, opens: result.clicks } : app));
+        setFilteredApps(filteredApps.map(app => app.id === appId ? { ...app, opens: result.clicks } : app));
+        window.open(linkApp, '_blank');
+      } catch (error) {
+        console.error('Ошибка при увеличении счётчика кликов:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+        alert('Ошибка при переходе по ссылке: ' + errorMessage);
+      }
+    } else {
+      alert('Ссылка на приложение недоступна.');
+    }
+  };
 
   return (
     <div className="content slide-in">
@@ -117,7 +150,15 @@ const AppsPage: React.FC = () => {
         <h2 className="section-title">Рейтинг приложений</h2>
         <div className="games-grid">
           {rankedApps.map(app => (
-            <Link to={`/app/${app.id}`} key={app.id} className="game-card">
+            <Link
+              to={`/app/${app.id}`}
+              key={app.id}
+              className={`game-card ${app.isPromotedInCatalog ? 'promoted-catalog' : ''} ${app.isPromotedInCategory ? 'promoted-category' : ''}`}
+              style={{
+                ...(app.isPromotedInCatalog ? { border: '2px solid yellow' } : {}),
+                ...(app.isPromotedInCategory && !app.isPromotedInCatalog ? { border: '2px solid orange' } : {}),
+              }}
+            >
               <div className="flex items-center gap-3">
                 <img src={app.icon} alt={app.name} className="w-10 h-10 rounded-lg" />
                 <div>
@@ -125,7 +166,7 @@ const AppsPage: React.FC = () => {
                   <p className="card-text">{app.shortDescription}</p>
                 </div>
               </div>
-              <button className="game-button">Get</button>
+              <button className="game-button" onClick={(e) => { e.preventDefault(); handleGetClick(app.id, app.linkApp); }}>Get</button>
             </Link>
           ))}
         </div>

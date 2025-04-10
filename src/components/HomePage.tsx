@@ -12,8 +12,8 @@ interface HomePageProps {
 interface Game {
   id: string;
   name: string;
-  categoryGame?: string; // Новая основная категория для игр
-  categoryApps?: string; // Новая основная категория для приложений
+  categoryGame?: string;
+  categoryApps?: string;
   url: string;
   imageUrl?: string;
   description?: string;
@@ -31,24 +31,43 @@ interface Game {
 const HomePage: React.FC<HomePageProps> = ({ games }) => {
   console.log('HomePage rendering, props:', { games });
 
-  // Сортировка для блока "Популярное" (по кликам)
   const popularGames = [...games]
     .sort((a, b) => (b.clicks || 0) - (a.clicks || 0))
     .slice(0, 5);
 
-  // Сортировка для блока "Выбор редакции" (продвигаемые приложения)
   const editorsChoice = games
     .filter(game => game.isPromotedInCatalog)
     .slice(0, 5);
 
-  // Сортировка для блока "Новенькое" (по дате добавления)
   const newGames = [...games]
     .sort((a, b) => new Date(b.dateAdded || '').getTime() - new Date(a.dateAdded || '').getTime())
     .slice(0, 5);
 
+  const handleGetClick = async (appId: string, linkApp?: string) => {
+    if (linkApp) {
+      try {
+        const response = await fetch(`https://nebula-server-ypun.onrender.com/api/apps/${appId}/click`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        if (!response.ok) {
+          throw new Error('Ошибка при увеличении счётчика кликов');
+        }
+        const result = await response.json();
+        console.log('Счётчик кликов увеличен:', result);
+        window.open(linkApp, '_blank');
+      } catch (error) {
+        console.error('Ошибка при увеличении счётчика кликов:', error);
+        const errorMessage = error instanceof Error ? error.message : 'Неизвестная ошибка';
+        alert('Ошибка при переходе по ссылке: ' + errorMessage);
+      }
+    } else {
+      alert('Ссылка на приложение недоступна.');
+    }
+  };
+
   return (
     <div className="content">
-      {/* Блок "Популярное" */}
       <section className="section">
         <h2 className="section-title">Популярное</h2>
         {popularGames.length === 0 ? (
@@ -59,8 +78,7 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
               <Link
                 to={`/app/${game.id}`}
                 key={game.id}
-                className={`game-card ${game.isPromotedInCatalog ? 'promoted' : ''}`}
-                style={game.isPromotedInCatalog ? { border: '2px solid yellow' } : {}}
+                className="game-card"
               >
                 <div className="flex items-center gap-3">
                   <img src={game.imageUrl} alt={game.name} className="w-10 h-10 rounded-lg" />
@@ -69,14 +87,13 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
                     <p className="card-text">{game.description}</p>
                   </div>
                 </div>
-                <button className="game-button">Get</button>
+                <button className="game-button" onClick={(e) => { e.preventDefault(); handleGetClick(game.id, game.linkApp); }}>Get</button>
               </Link>
             ))}
           </div>
         )}
       </section>
 
-      {/* Блок "Выбор редакции" */}
       <section className="section">
         <h2 className="section-title">Выбор редакции</h2>
         {editorsChoice.length === 0 ? (
@@ -87,8 +104,7 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
               <Link
                 to={`/app/${game.id}`}
                 key={game.id}
-                className={`game-card ${game.isPromotedInCatalog ? 'promoted' : ''}`}
-                style={game.isPromotedInCatalog ? { border: '2px solid yellow' } : {}}
+                className="game-card"
               >
                 <div className="flex items-center gap-3">
                   <img src={game.imageUrl} alt={game.name} className="w-10 h-10 rounded-lg" />
@@ -97,14 +113,13 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
                     <p className="card-text">{game.description}</p>
                   </div>
                 </div>
-                <button className="game-button">Get</button>
+                <button className="game-button" onClick={(e) => { e.preventDefault(); handleGetClick(game.id, game.linkApp); }}>Get</button>
               </Link>
             ))}
           </div>
         )}
       </section>
 
-      {/* Блок "Новенькое" */}
       <section className="section">
         <h2 className="section-title">Новенькое</h2>
         {newGames.length === 0 ? (
@@ -115,8 +130,7 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
               <Link
                 to={`/app/${game.id}`}
                 key={game.id}
-                className={`game-card ${game.isPromotedInCatalog ? 'promoted' : ''}`}
-                style={game.isPromotedInCatalog ? { border: '2px solid yellow' } : {}}
+                className="game-card"
               >
                 <div className="flex items-center gap-3">
                   <img src={game.imageUrl} alt={game.name} className="w-10 h-10 rounded-lg" />
@@ -125,7 +139,7 @@ const HomePage: React.FC<HomePageProps> = ({ games }) => {
                     <p className="card-text">{game.description}</p>
                   </div>
                 </div>
-                <button className="game-button">Get</button>
+                <button className="game-button" onClick={(e) => { e.preventDefault(); handleGetClick(game.id, game.linkApp); }}>Get</button>
               </Link>
             ))}
           </div>
